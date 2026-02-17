@@ -1,5 +1,6 @@
 import { X, Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
+import { Link } from 'react-router';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -105,9 +106,13 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               <span>Total:</span>
               <span className="text-blue-600">£{getCartTotal().toFixed(2)}</span>
             </div>
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition-colors">
+            <Link 
+              to="/checkout"
+              onClick={onClose}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition-colors block text-center"
+            >
               Proceed to Checkout
-            </button>
+            </Link>
             <button
               onClick={onClose}
               className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors"

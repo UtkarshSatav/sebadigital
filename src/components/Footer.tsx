@@ -70,15 +70,15 @@ export function Footer() {
             
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 flex-shrink-0" />
+                <MapPin className="w-4 h-4 shrink-0" />
                 <span>West Ealing, London</span>
               </div>
               <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 flex-shrink-0" />
+                <Phone className="w-4 h-4 shrink-0" />
                 <span>0208 567 8550</span>
               </div>
               <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 flex-shrink-0" />
+                <Mail className="w-4 h-4 shrink-0" />
                 <span>info@sebadigital.co.uk</span>
               </div>
             </div>
@@ -104,7 +104,8 @@ export function Footer() {
                   <CreditCard className="w-4 h-4 text-gray-700" />
                   <span className="text-xs font-semibold text-gray-700">Mastercard</span>
                 </div>
-                <div className="bg-white px-3 py-1.5 rounded">
+                <div className="bg-white px-3 py-1.5 rounded flex items-center gap-1">
+                  <CreditCard className="w-4 h-4 text-gray-700" />
                   <span className="text-xs font-semibold text-gray-700">PayPal</span>
                 </div>
               </div>

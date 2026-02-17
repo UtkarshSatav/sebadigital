@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import { Tv, Camera, Music, Refrigerator, Smartphone, Headphones, Cable } from 'lucide-react';
+import { Tv, Camera, Music, CardSim, Smartphone, Headphones, Cable } from 'lucide-react';
 
 const categories = [
   {
@@ -21,10 +21,10 @@ const categories = [
     subcategories: ['Home Theater', 'Soundbars', 'Blu-ray Players', 'Streaming Devices', 'Projectors', 'Speakers']
   },
   {
-    name: 'Appliances',
-    slug: 'appliances',
-    icon: Refrigerator,
-    subcategories: ['Refrigerators', 'Washing Machines', 'Microwaves', 'Vacuum Cleaners', 'Air Purifiers', 'Dishwashers']
+    name: 'Storage Devices',
+    slug: 'storage-devices',
+    icon: CardSim,
+    subcategories: ['USB keys', 'Hard drives', 'Memory cards', 'Micro cards', 'SD cards', 'Flash memory']
   },
   {
     name: 'Phones',

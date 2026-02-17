@@ -1,4 +1,4 @@
-import { MapPin, Phone, Mail, Clock } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Disc } from 'lucide-react';
 
 export function ContactUs() {
   return (
@@ -61,6 +61,7 @@ export function ContactUs() {
                   <option>Product Question</option>
                   <option>Technical Support</option>
                   <option>VHS to DVD Transfer</option>
+                  <option>Audio Cassette to CD Transfer</option>
                   <option>TV Installation</option>
                   <option>Other</option>
                 </select>
@@ -96,11 +97,14 @@ export function ContactUs() {
                   <MapPin className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-1">Visit Our Store</h3>
+                  <h3 className="font-semibold text-lg mb-1">Warehouse Location</h3>
                   <p className="text-gray-600">
                     Seba Digital<br />
                     West Ealing, London<br />
                     United Kingdom
+                  </p>
+                  <p className="text-sm text-orange-600 font-medium mt-2">
+                    Collection only - No retail store
                   </p>
                 </div>
               </div>
@@ -138,12 +142,36 @@ export function ContactUs() {
                   <Clock className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-1">Opening Hours</h3>
+                  <h3 className="font-semibold text-lg mb-1">Collection Hours</h3>
                   <div className="text-gray-600 space-y-1">
-                    <p>Monday - Friday: 9:00 AM - 6:00 PM</p>
-                    <p>Saturday: 10:00 AM - 5:00 PM</p>
-                    <p>Sunday: Closed</p>
+                    <p className="font-semibold">Monday - Friday: 10:00 AM - 2:00 PM</p>
+                    <p className="text-sm text-gray-500">For order collection only</p>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Transfer Services Card */}
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-xl p-6 mb-8">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Disc className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg mb-2 text-gray-900">Transfer to DVD Services</h3>
+                  <ul className="space-y-1.5 text-gray-700 mb-3">
+                    <li className="flex items-start gap-2">
+                      <span className="text-blue-600 font-bold">•</span>
+                      <span>VHS to DVD Transfer</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-blue-600 font-bold">•</span>
+                      <span>Audio Cassette to Audio CD (up to 1 hour recording per tape)</span>
+                    </li>
+                  </ul>
+                  <p className="text-sm text-gray-600">
+                    Contact us for pricing and service details. Use the form or call us directly.
+                  </p>
                 </div>
               </div>
             </div>
@@ -168,28 +196,42 @@ export function ContactUs() {
             <div>
               <h3 className="font-semibold text-lg mb-2">Do you offer delivery?</h3>
               <p className="text-gray-600">
-                Yes, we offer local delivery within West Ealing and surrounding areas. Contact us for delivery rates and availability.
+                Yes! We offer free standard delivery (3-5 working days) on all orders. Next day delivery is available for £4.99 when ordered before 2:00pm on a working day.
+              </p>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold text-lg mb-2">What is Click & Collect?</h3>
+              <p className="text-gray-600">
+                Order online and collect from our warehouse for free. Collection is available Monday to Friday, 10:00am - 2:00pm. Please note we operate from a warehouse only, not a retail store.
               </p>
             </div>
             
             <div>
               <h3 className="font-semibold text-lg mb-2">What payment methods do you accept?</h3>
               <p className="text-gray-600">
-                We accept cash, all major credit/debit cards (Visa, Mastercard), and PayPal.
+                We accept all major credit/debit cards (Visa, Mastercard, American Express) securely through our checkout.
               </p>
             </div>
             
             <div>
-              <h3 className="font-semibold text-lg mb-2">Do you offer installation services?</h3>
+              <h3 className="font-semibold text-lg mb-2">What is your return policy?</h3>
               <p className="text-gray-600">
-                Yes, we provide professional TV installation and setup services. Ask our team for more details.
+                Free return shipping via Royal Mail Tracked for orders with 2+ items. Single-item orders have a return charge of £3.49. Items must be returned within 30 days in original condition.
               </p>
             </div>
-            
+
             <div>
-              <h3 className="font-semibold text-lg mb-2">Can I return a product?</h3>
+              <h3 className="font-semibold text-lg mb-2">How long does VHS to DVD transfer take?</h3>
               <p className="text-gray-600">
-                We have a 30-day return policy for most products. Items must be in original condition with all packaging.
+                Transfer times vary depending on the number of tapes. Contact us with your specific requirements for an accurate timeframe and quote.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-lg mb-2">Can I visit your store?</h3>
+              <p className="text-gray-600">
+                We no longer operate a retail store. We operate from a warehouse for order collection only, Monday to Friday, 10:00am - 2:00pm. Please order online or contact us before visiting.
               </p>
             </div>
           </div>
