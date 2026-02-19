@@ -214,17 +214,10 @@ export function ContactUs() {
               </p>
             </div>
             
-            {/* <div>
+            <div>
               <h3 className="font-semibold text-lg mb-2">What is your return policy?</h3>
               <p className="text-gray-600">
-                Free return shipping via Royal Mail Tracked for orders with 2+ items. Single-item orders have a return charge of £3.49. Items must be returned within 30 days in original condition.
-              </p>
-            </div> */}
-
-                        <div>
-              <h3 className="font-semibold text-lg mb-2">Can I visit your store?</h3>
-              <p className="text-gray-600">
-                We operate from a warehouse for order collection only, Monday to Friday, 10:00am - 2:00pm. Please order online or contact us before visiting.
+                Once your conversion is complete, we’ll return your order free of charge via Royal Mail Tracked if you order is more one For single-item orders, a £3.49 return fee applies
               </p>
             </div>
 
@@ -232,12 +225,15 @@ export function ContactUs() {
               <h3 className="font-semibold text-lg mb-2">How long does VHS to DVD transfer take?</h3>
               <p className="text-gray-600">
                 The turnaround time depends on how many tapes you’d like converted. Get in touch with your specific requirements and we’ll provide an accurate timeframe and quote.
-              <br/>
-              Once your conversion is complete, we’ll return your order free of charge via Royal Mail Tracked if you order is more one For single-item orders, a £3.49 return fee applie
               </p>
             </div>
 
-
+            <div>
+              <h3 className="font-semibold text-lg mb-2">Can I visit your store?</h3>
+              <p className="text-gray-600">
+                We operate from a warehouse for order collection only, Monday to Friday, 10:00am - 2:00pm. Please order online or contact us before visiting.
+              </p>
+            </div>
           </div>
         </div>
       </div>
