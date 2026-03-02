@@ -1,8 +1,9 @@
-import { ShoppingCart, Phone, Menu, X, ChevronDown, User } from 'lucide-react';
+import { ShoppingCart, Phone, Menu, X, ChevronDown, User, LayoutDashboard } from 'lucide-react';
 import { Link } from 'react-router';
 import { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { useCustomerAuth } from '../contexts/CustomerAuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import { CartDrawer } from './CartDrawer';
 import { MegaMenu } from './MegaMenu';
 import logo from '../assets/logo.jpg';
@@ -14,6 +15,7 @@ export function Header() {
 
   const { getCartCount } = useCart();
   const { customer } = useCustomerAuth();
+  const { isAdmin, adminProfile } = useAuth();
   const cartCount = getCartCount();
 
   return (
@@ -48,7 +50,15 @@ export function Header() {
                 <span className="text-sm hidden lg:inline">0208 567 8550</span>
               </div>
               {/* Account Button */}
-              {customer ? (
+              {isAdmin ? (
+                <Link
+                  to="/admin"
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span className="hidden sm:inline">{adminProfile?.displayName?.split(' ')[0] ?? 'Admin'}</span>
+                </Link>
+              ) : customer ? (
                 <Link
                   to="/account/profile"
                   className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
