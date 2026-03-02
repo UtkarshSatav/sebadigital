@@ -1,26 +1,30 @@
 import { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
-import { Link, useNavigate } from 'react-router';
-import { 
-  CreditCard, 
-  Lock, 
-  Truck, 
-  Store, 
-  Package, 
+import { Link, useNavigate, useSearchParams } from 'react-router';
+import {
+  Lock,
+  Truck,
+  Store,
+  Package,
   Clock,
   ChevronLeft,
-  Check,
-  Info
+  Info,
+  MapPin,
+  ShieldCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { createOrder, calculateLineItem, calculateOrderPricing, getShippingFee } from '../services/orderService';
+import { PayPalProvider, PayPalCheckoutButtons } from '../services/paypalService';
 
 type DeliveryMethod = 'standard' | 'nextday' | 'collect';
 
 export function Checkout() {
   const { cart, getCartTotal, clearCart } = useCart();
   const navigate = useNavigate();
-  
-  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('standard');
+  const [searchParams] = useSearchParams();
+
+  const initialMethod = searchParams.get('method') === 'collect' ? 'collect' : 'standard';
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>(initialMethod);
   const [formData, setFormData] = useState({
     email: '',
     firstName: '',
@@ -29,20 +33,15 @@ export function Checkout() {
     city: '',
     postcode: '',
     phone: '',
-    cardNumber: '',
-    cardName: '',
-    expiryDate: '',
-    cvv: '',
-    billingAddress: '',
   });
-  const [sameAsShipping, setSameAsShipping] = useState(true);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [readyToPay, setReadyToPay] = useState(false);
 
   const subtotal = getCartTotal();
   const deliveryFee = deliveryMethod === 'nextday' ? 4.99 : 0;
   const returnShippingFee = cart.length === 1 ? 3.49 : 0;
   const total = subtotal + deliveryFee;
-  
+
   const itemCount = cart.reduce((count, item) => count + item.quantity, 0);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,28 +49,85 @@ export function Checkout() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  // Validates the form before showing PayPal buttons
+  const handleProceedToPayment = () => {
+    if (!formData.email || !formData.firstName || !formData.lastName) {
+      toast.error('Please fill in your contact information');
+      return;
+    }
+    if (deliveryMethod !== 'collect' && (!formData.address || !formData.city || !formData.postcode)) {
+      toast.error('Please fill in your shipping address');
+      return;
+    }
     if (!agreeToTerms) {
       toast.error('Please accept the terms and conditions');
       return;
     }
+    setReadyToPay(true);
+  };
 
-    if (cart.length === 0) {
-      toast.error('Your cart is empty');
-      return;
+  // Called by PayPal after successful payment
+  const handlePayPalSuccess = async (transactionId: string, payerEmail: string) => {
+    if (cart.length === 0) { toast.error('Your cart is empty'); return; }
+    try {
+      const lineItems = cart.map(item => {
+        const lineCalc = calculateLineItem(item.price, item.quantity, 0.2);
+        return {
+          productId: String(item.id),
+          title: item.title,
+          sku: '',
+          image: item.image,
+          unitPrice: item.price,
+          quantity: item.quantity,
+          vatRate: 0.2,
+          ...lineCalc,
+        };
+      });
+
+      const shippingFee = deliveryMethod === 'nextday' ? 4.99 : getShippingFee(subtotal);
+      const pricing = calculateOrderPricing(lineItems, shippingFee);
+
+      const orderId = await createOrder({
+        orderNumber: `SEB-${Date.now().toString(36).toUpperCase()}`,
+        customerId: null,
+        customerName: `${formData.firstName} ${formData.lastName}`,
+        customerEmail: formData.email,
+        customerPhone: formData.phone,
+        status: 'paid',
+        lineItems,
+        pricing,
+        payment: {
+          method: 'paypal',
+          status: 'completed',
+          transactionId,
+          paidAt: null,
+        },
+        deliveryMethod: deliveryMethod === 'collect' ? 'click_and_collect' : 'shipping',
+        shippingAddress: deliveryMethod !== 'collect' ? {
+          line1: formData.address,
+          city: formData.city,
+          postcode: formData.postcode,
+          country: 'GB',
+        } : null,
+        shippingStatus: deliveryMethod !== 'collect' ? { status: 'pending' } : null,
+        clickAndCollect: deliveryMethod === 'collect' ? {
+          status: 'pending_collection',
+          storeAddress: 'Seba Digital, West Ealing, London',
+          readyAt: null,
+          collectedAt: null,
+        } : null,
+        discountCode: null,
+        notes: '',
+      } as any);
+
+      toast.success('Payment successful! Order confirmed.', {
+        description: `Order #${orderId.slice(-6).toUpperCase()} confirmed · PayPal ref: ${transactionId.slice(-8)}`,
+      });
+      clearCart();
+      setTimeout(() => navigate('/'), 2000);
+    } catch (err: any) {
+      toast.error('Order creation failed', { description: err.message });
     }
-
-    // Simulate order processing
-    toast.success('Order placed successfully!', {
-      description: `Order confirmation sent to ${formData.email}`,
-    });
-    
-    clearCart();
-    setTimeout(() => {
-      navigate('/');
-    }, 2000);
   };
 
   if (cart.length === 0) {
@@ -113,12 +169,11 @@ export function Checkout() {
             {/* Delivery Method */}
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Delivery Method</h2>
-              
+
               <div className="space-y-3">
                 {/* Standard Delivery */}
-                <label className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                  deliveryMethod === 'standard' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-                }`}>
+                <label className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-colors ${deliveryMethod === 'standard' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                  }`}>
                   <input
                     type="radio"
                     name="delivery"
@@ -138,9 +193,8 @@ export function Checkout() {
                 </label>
 
                 {/* Next Day Delivery */}
-                <label className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                  deliveryMethod === 'nextday' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-                }`}>
+                <label className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-colors ${deliveryMethod === 'nextday' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                  }`}>
                   <input
                     type="radio"
                     name="delivery"
@@ -160,9 +214,8 @@ export function Checkout() {
                 </label>
 
                 {/* Click & Collect */}
-                <label className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                  deliveryMethod === 'collect' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-                }`}>
+                <label className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-colors ${deliveryMethod === 'collect' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                  }`}>
                   <input
                     type="radio"
                     name="delivery"
@@ -177,20 +230,33 @@ export function Checkout() {
                       <span className="font-semibold text-gray-900">Click & Collect</span>
                       <span className="text-green-600 font-semibold ml-auto">FREE</span>
                     </div>
-                    <p className="text-sm text-gray-600">Collect from warehouse</p>
-                    <p className="text-sm text-gray-600 font-medium mt-1">Monday to Friday, 10:00am - 2:00pm</p>
+                    <p className="text-sm text-gray-600">Collect from our store</p>
+                    <p className="text-sm text-gray-600 font-medium mt-1">Mon–Fri 9am–6pm • Sat 9am–5pm</p>
                   </div>
                 </label>
               </div>
 
-              {/* Warehouse Notice */}
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3">
-                <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <div className="text-sm text-blue-900">
-                  <p className="font-semibold mb-1">Important Notice</p>
-                  <p>We operate from a warehouse only (no retail store). The warehouse is open for order collection Monday to Friday, 10:00am - 2:00pm.</p>
+              {/* Store Info Notice */}
+              {deliveryMethod === 'collect' && (
+                <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-lg flex gap-3">
+                  <MapPin className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-emerald-900">
+                    <p className="font-semibold mb-1">Seba Digital — West Ealing, London</p>
+                    <p>Your order will be ready for collection. We'll notify you by email when it's ready to pick up.</p>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Delivery Info Notice */}
+              {deliveryMethod !== 'collect' && (
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3">
+                  <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-blue-900">
+                    <p className="font-semibold mb-1">Delivery Information</p>
+                    <p>Free delivery on orders over £50. We deliver across the UK mainland.</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Contact Information */}
@@ -307,92 +373,66 @@ export function Checkout() {
               </div>
             )}
 
-            {/* Payment Information */}
+            {/* Payment — PayPal Smart Buttons */}
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
                 <Lock className="w-5 h-5 text-green-600" />
-                Payment Information
+                Payment
               </h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Cardholder Name
-                  </label>
-                  <input
-                    type="text"
-                    name="cardName"
-                    value={formData.cardName}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                    placeholder="Name on card"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Card Number
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      name="cardNumber"
-                      value={formData.cardNumber}
-                      onChange={handleInputChange}
-                      required
-                      maxLength={19}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                      placeholder="1234 5678 9012 3456"
-                    />
-                    <CreditCard className="absolute right-3 top-2.5 w-5 h-5 text-gray-400" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Expiry Date
-                    </label>
-                    <input
-                      type="text"
-                      name="expiryDate"
-                      value={formData.expiryDate}
-                      onChange={handleInputChange}
-                      required
-                      maxLength={5}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                      placeholder="MM/YY"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      CVV
-                    </label>
-                    <input
-                      type="text"
-                      name="cvv"
-                      value={formData.cvv}
-                      onChange={handleInputChange}
-                      required
-                      maxLength={3}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                      placeholder="123"
-                    />
-                  </div>
-                </div>
+              <p className="text-sm text-gray-500 mb-5">
+                Secure checkout powered by PayPal. You can pay with your PayPal account or any debit/credit card.
+              </p>
 
-                {/* Billing Address */}
-                <div className="pt-4 border-t border-gray-200">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={sameAsShipping}
-                      onChange={(e) => setSameAsShipping(e.target.checked)}
-                      className="w-4 h-4 text-blue-600"
+              {!readyToPay ? (
+                <button
+                  onClick={handleProceedToPayment}
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2"
+                >
+                  <ShieldCheck className="w-5 h-5" />
+                  Proceed to Payment — £{total.toFixed(2)}
+                </button>
+              ) : (
+                <div>
+                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-green-600" />
+                    <span className="text-sm text-green-800 font-medium">Details confirmed. Complete payment below.</span>
+                  </div>
+                  <PayPalProvider>
+                    <PayPalCheckoutButtons
+                      orderDetails={{
+                        amount: total,
+                        orderDescription: `Seba Digital Order — ${itemCount} item(s)`,
+                        items: cart.map(item => ({
+                          name: item.title,
+                          quantity: item.quantity,
+                          unitAmount: item.price,
+                        })),
+                        shippingAddress: deliveryMethod !== 'collect' ? {
+                          line1: formData.address,
+                          city: formData.city,
+                          postcode: formData.postcode,
+                          country: 'GB',
+                        } : undefined,
+                      }}
+                      onSuccess={handlePayPalSuccess}
+                      onError={(err) => {
+                        toast.error('Payment failed', { description: err?.message || 'Please try again' });
+                        setReadyToPay(false);
+                      }}
                     />
-                    <span className="text-sm text-gray-700">
-                      Billing address same as shipping address
-                    </span>
-                  </label>
+                  </PayPalProvider>
+                  <button onClick={() => setReadyToPay(false)}
+                    className="mt-3 w-full py-2 text-sm text-gray-500 hover:text-gray-700">
+                    ← Back to edit details
+                  </button>
                 </div>
+              )}
+
+              {/* Trust signals */}
+              <div className="mt-5 flex items-center justify-center gap-4 pt-4 border-t border-gray-100">
+                <img src="https://www.paypalobjects.com/webstatic/en_US/i/buttons/pp-acceptance-medium.png"
+                  alt="Pay with PayPal" className="h-6 object-contain" />
+                <span className="text-xs text-gray-400">or debit/credit card via PayPal</span>
               </div>
             </div>
 
@@ -421,25 +461,17 @@ export function Checkout() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Order Summary</h2>
-              
+
               {/* Items */}
               <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
                 {cart.map((item) => (
                   <div key={item.id} className="flex gap-3">
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
+                    <img src={item.image} alt={item.title} className="w-16 h-16 object-cover rounded-lg" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 line-clamp-2">
-                        {item.title}
-                      </p>
+                      <p className="text-sm font-medium text-gray-900 line-clamp-2">{item.title}</p>
                       <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
                     </div>
-                    <p className="text-sm font-semibold text-gray-900">
-                      £{(item.price * item.quantity).toFixed(2)}
-                    </p>
+                    <p className="text-sm font-semibold text-gray-900">£{(item.price * item.quantity).toFixed(2)}</p>
                   </div>
                 ))}
               </div>
@@ -451,9 +483,7 @@ export function Checkout() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Delivery</span>
-                  <span className="font-semibold">
-                    {deliveryFee === 0 ? 'FREE' : `£${deliveryFee.toFixed(2)}`}
-                  </span>
+                  <span className="font-semibold">{deliveryFee === 0 ? 'FREE' : `£${deliveryFee.toFixed(2)}`}</span>
                 </div>
                 <div className="flex justify-between text-base font-bold pt-2 border-t border-gray-200">
                   <span>Total</span>
@@ -461,43 +491,20 @@ export function Checkout() {
                 </div>
               </div>
 
-              {/* Return Policy Notice */}
               <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                 <p className="text-xs text-gray-600">
-                  <span className="font-semibold">Return Shipping:</span>
-                  {cart.length > 1 ? (
-                    <> Free via Royal Mail Tracked (2+ items)</>
-                  ) : (
-                    <> £{returnShippingFee.toFixed(2)} via Royal Mail Tracked</>
-                  )}
+                  <span className="font-semibold">Return Shipping: </span>
+                  {cart.length > 1 ? 'Free via Royal Mail Tracked (2+ items)' : `£${returnShippingFee.toFixed(2)} via Royal Mail Tracked`}
                 </p>
               </div>
 
-              {/* Services Notice */}
               <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-xs text-blue-900">
-                  <span className="font-semibold">Transfer to DVD Services:</span>
-                  <br />
+                  <span className="font-semibold">Transfer to DVD Services:</span><br />
                   For VHS to DVD, Audio Cassette to CD and other transfer services,{' '}
-                  <Link to="/contact" className="underline font-semibold">
-                    contact us
-                  </Link>
-                  .
+                  <Link to="/contact" className="underline font-semibold">contact us</Link>.
                 </p>
               </div>
-
-              <button
-                onClick={handleSubmit}
-                disabled={!agreeToTerms}
-                className="w-full mt-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
-              >
-                <Lock className="w-5 h-5" />
-                Place Order - £{total.toFixed(2)}
-              </button>
-
-              <p className="text-xs text-gray-500 text-center mt-3">
-                Secure payment processing
-              </p>
             </div>
           </div>
         </div>

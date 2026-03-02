@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Star, ShoppingCart } from 'lucide-react';
-import { useParams, Link } from 'react-router';
+import { Star, ShoppingCart, Store } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router';
 import { products } from '../data/products';
 import { useCart } from '../contexts/CartContext';
 import { toast } from 'sonner';
@@ -8,12 +8,13 @@ import { toast } from 'sonner';
 export function Products() {
   const { category } = useParams();
   const { addToCart } = useCart();
+  const navigate = useNavigate();
 
   const filteredProducts = category
     ? products.filter(p => p.category === category)
     : products;
 
-  const categoryTitle = category 
+  const categoryTitle = category
     ? category.charAt(0).toUpperCase() + category.slice(1)
     : 'All Products';
 
@@ -29,6 +30,19 @@ export function Products() {
     });
   };
 
+  const handleCollectAtStore = (product: any) => {
+    addToCart({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      image: product.image,
+    });
+    toast.success('Item added — Click & Collect selected', {
+      description: `${product.title} • Collect from West Ealing store`,
+    });
+    navigate('/checkout?method=collect');
+  };
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero */}
@@ -36,7 +50,7 @@ export function Products() {
         <div className="max-w-7xl mx-auto px-6">
           <h1 className="text-5xl font-bold mb-4">{categoryTitle}</h1>
           <p className="text-xl text-blue-100">
-            {category 
+            {category
               ? `Browse our selection of premium ${categoryTitle.toLowerCase()}`
               : 'Browse our extensive collection of premium electronics and appliances'
             }
@@ -51,7 +65,7 @@ export function Products() {
             Showing {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
           </p>
         </div>
-        
+
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProducts.map((product) => (
             <div
@@ -61,11 +75,10 @@ export function Products() {
               <Link to={`/product/${product.id}`}>
                 <div className="relative overflow-hidden bg-gray-100">
                   {product.badge && (
-                    <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold z-10 ${
-                      product.badge === 'SALE' ? 'bg-red-500 text-white' :
-                      product.badge === 'HOT' ? 'bg-orange-500 text-white' :
-                      'bg-green-500 text-white'
-                    }`}>
+                    <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold z-10 ${product.badge === 'SALE' ? 'bg-red-500 text-white' :
+                        product.badge === 'HOT' ? 'bg-orange-500 text-white' :
+                          'bg-green-500 text-white'
+                      }`}>
                       {product.badge}
                     </div>
                   )}
@@ -76,14 +89,14 @@ export function Products() {
                   />
                 </div>
               </Link>
-              
+
               <div className="p-4">
                 <Link to={`/product/${product.id}`}>
                   <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 min-h-[3rem] hover:text-blue-600 transition-colors">
                     {product.title}
                   </h3>
                 </Link>
-                
+
                 <div className="flex items-center gap-2 mb-3">
                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -101,13 +114,23 @@ export function Products() {
                   </span>
                 </div>
 
-                <button
-                  onClick={() => handleAddToCart(product)}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded font-medium flex items-center justify-center gap-2 transition-colors"
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                  Add to Cart
-                </button>
+                {/* Buttons */}
+                <div className="space-y-2">
+                  <button
+                    onClick={() => handleAddToCart(product)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded font-medium flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    Add to Cart
+                  </button>
+                  <button
+                    onClick={() => handleCollectAtStore(product)}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded font-medium flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <Store className="w-4 h-4" />
+                    Collect at Store
+                  </button>
+                </div>
               </div>
             </div>
           ))}

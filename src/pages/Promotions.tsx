@@ -1,10 +1,17 @@
+import { useState, useEffect } from 'react';
 import { Star, ShoppingCart, Clock } from 'lucide-react';
 import { products } from '../data/products';
 import { useCart } from '../contexts/CartContext';
+import { getCmsContentByType, type CmsContent } from '../services/cmsService';
 import { toast } from 'sonner';
 
 export function Promotions() {
   const { addToCart } = useCart();
+  const [cmsData, setCmsData] = useState<CmsContent | null>(null);
+
+  useEffect(() => {
+    getCmsContentByType('promotions_banner').then(setCmsData).catch(console.error);
+  }, []);
 
   const saleProducts = products.filter(p => p.badge === 'SALE');
   const hotProducts = products.filter(p => p.badge === 'HOT');
@@ -33,9 +40,11 @@ export function Promotions() {
               <span className="font-semibold">Limited Time Offers</span>
             </div>
           </div>
-          <h1 className="text-5xl font-bold mb-6">Amazing Promotions</h1>
-          <p className="text-xl text-red-100 max-w-3xl mx-auto">
-            Don't miss out on our exclusive deals and discounts. Save big on premium electronics and appliances!
+          <h1 className="text-5xl font-bold mb-6">
+            {cmsData?.title || 'Amazing Promotions'}
+          </h1>
+          <p className="text-xl text-red-100 max-w-3xl mx-auto whitespace-pre-line">
+            {cmsData?.description || "Don't miss out on our exclusive deals and discounts. Save big on premium electronics and appliances!"}
           </p>
         </div>
       </div>
@@ -68,12 +77,12 @@ export function Promotions() {
                   className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
-              
+
               <div className="p-4">
                 <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 min-h-[3rem]">
                   {product.title}
                 </h3>
-                
+
                 <div className="flex items-center gap-2 mb-3">
                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -136,12 +145,12 @@ export function Promotions() {
                     className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
-                
+
                 <div className="p-4">
                   <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 min-h-[3rem]">
                     {product.title}
                   </h3>
-                  
+
                   <div className="flex items-center gap-2 mb-3">
                     <div className="flex items-center gap-1">
                       <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -204,12 +213,12 @@ export function Promotions() {
                   className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
-              
+
               <div className="p-4">
                 <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 min-h-[3rem]">
                   {product.title}
                 </h3>
-                
+
                 <div className="flex items-center gap-2 mb-3">
                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />

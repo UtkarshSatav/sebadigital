@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router';
-import { Star, ShoppingCart, Truck, Shield, RotateCcw, ChevronLeft } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router';
+import { Star, ShoppingCart, Truck, Shield, RotateCcw, ChevronLeft, Store, MapPin } from 'lucide-react';
 import { products } from '../data/products';
 import { useCart } from '../contexts/CartContext';
 import { toast } from 'sonner';
@@ -9,6 +9,7 @@ export function ProductDetail() {
   const { id } = useParams();
   const product = products.find(p => p.id === Number(id));
   const { addToCart } = useCart();
+  const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
 
@@ -40,6 +41,21 @@ export function ProductDetail() {
     toast.success(`${quantity} item(s) added to cart`, {
       description: product.title,
     });
+  };
+
+  const handleCollectAtStore = () => {
+    for (let i = 0; i < quantity; i++) {
+      addToCart({
+        id: product.id,
+        title: product.title,
+        price: product.price,
+        image: product.image,
+      });
+    }
+    toast.success(`${quantity} item(s) added — Click & Collect selected`, {
+      description: `${product.title} • Collect from West Ealing store`,
+    });
+    navigate('/checkout?method=collect');
   };
 
   const relatedProducts = products
@@ -80,11 +96,10 @@ export function ProductDetail() {
             {/* Main Image */}
             <div className="relative bg-gray-100 rounded-lg overflow-hidden aspect-square">
               {product.badge && (
-                <div className={`absolute top-4 left-4 px-4 py-2 rounded-full text-sm font-bold z-10 ${
-                  product.badge === 'SALE' ? 'bg-red-500 text-white' :
+                <div className={`absolute top-4 left-4 px-4 py-2 rounded-full text-sm font-bold z-10 ${product.badge === 'SALE' ? 'bg-red-500 text-white' :
                   product.badge === 'HOT' ? 'bg-orange-500 text-white' :
-                  'bg-green-500 text-white'
-                }`}>
+                    'bg-green-500 text-white'
+                  }`}>
                   {product.badge}
                 </div>
               )}
@@ -102,11 +117,10 @@ export function ProductDetail() {
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`relative bg-gray-100 rounded-lg overflow-hidden aspect-square border-2 transition-all ${
-                      selectedImage === index
-                        ? 'border-blue-600 ring-2 ring-blue-200'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                    className={`relative bg-gray-100 rounded-lg overflow-hidden aspect-square border-2 transition-all ${selectedImage === index
+                      ? 'border-blue-600 ring-2 ring-blue-200'
+                      : 'border-gray-200 hover:border-gray-300'
+                      }`}
                   >
                     <img
                       src={img}
@@ -123,18 +137,17 @@ export function ProductDetail() {
           <div className="space-y-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-3">{product.title}</h1>
-              
+
               <div className="flex items-center gap-4 mb-4">
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`w-5 h-5 ${
-                          i < Math.floor(product.rating)
-                            ? 'fill-yellow-400 text-yellow-400'
-                            : 'text-gray-300'
-                        }`}
+                        className={`w-5 h-5 ${i < Math.floor(product.rating)
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-gray-300'
+                          }`}
                       />
                     ))}
                   </div>
@@ -160,7 +173,7 @@ export function ProductDetail() {
             <div className="border-t border-b border-gray-200 py-6">
               <h3 className="font-semibold text-gray-900 mb-3">Product Description</h3>
               <p className="text-gray-700 leading-relaxed">
-                {product.description || 
+                {(product as any).description ||
                   `Experience premium quality with the ${product.title}. This exceptional product combines cutting-edge technology with outstanding performance, delivering exceptional value for your investment. Perfect for those who demand the best in ${product.category}.`
                 }
               </p>
@@ -170,13 +183,13 @@ export function ProductDetail() {
             <div className="space-y-3">
               <h3 className="font-semibold text-gray-900">Key Features</h3>
               <ul className="space-y-2">
-                {(product.features || [
+                {((product as any).features || [
                   'Premium build quality and materials',
                   'Latest technology and innovation',
                   'Energy efficient design',
                   'Easy to use and set up',
                   'Comprehensive warranty included'
-                ]).map((feature, index) => (
+                ]).map((feature: string, index: number) => (
                   <li key={index} className="flex items-start gap-2 text-gray-700">
                     <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2 flex-shrink-0" />
                     <span>{feature}</span>
@@ -205,14 +218,35 @@ export function ProductDetail() {
               </div>
             </div>
 
-            {/* Add to Cart Button */}
-            <button
-              onClick={handleAddToCart}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-lg font-semibold text-lg flex items-center justify-center gap-3 transition-colors"
-            >
-              <ShoppingCart className="w-6 h-6" />
-              Add to Cart
-            </button>
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <button
+                onClick={handleAddToCart}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-lg font-semibold text-lg flex items-center justify-center gap-3 transition-colors"
+              >
+                <ShoppingCart className="w-6 h-6" />
+                Add to Cart
+              </button>
+              <button
+                onClick={handleCollectAtStore}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-lg font-semibold text-lg flex items-center justify-center gap-3 transition-colors"
+              >
+                <Store className="w-6 h-6" />
+                Collect at Store — FREE
+              </button>
+            </div>
+
+            {/* Store Info */}
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <MapPin className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-emerald-900 text-sm">Collect from Seba Digital</p>
+                  <p className="text-sm text-emerald-700">West Ealing, London</p>
+                  <p className="text-xs text-emerald-600 mt-1">Mon–Fri 9am–6pm • Sat 9am–5pm</p>
+                </div>
+              </div>
+            </div>
 
             {/* Benefits */}
             <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-200">

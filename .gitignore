@@ -1,3 +1,11 @@
+# ─── Secret / Credential files — NEVER commit these ──────────────────────────
+.env
+.env.local
+.env.production
+functions/.env
+functions/.env.local
+
+# ─── Logs ────────────────────────────────────────────────────────────────────
 # Logs
 logs
 *.log

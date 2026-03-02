@@ -1,7 +1,8 @@
-import { ShoppingCart, Phone, Menu, X, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Phone, Menu, X, ChevronDown, User } from 'lucide-react';
 import { Link } from 'react-router';
 import { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
+import { useCustomerAuth } from '../contexts/CustomerAuthContext';
 import { CartDrawer } from './CartDrawer';
 import { MegaMenu } from './MegaMenu';
 import logo from '../assets/logo.jpg';
@@ -10,7 +11,9 @@ export function Header() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
+
   const { getCartCount } = useCart();
+  const { customer } = useCustomerAuth();
   const cartCount = getCartCount();
 
   return (
@@ -44,7 +47,27 @@ export function Header() {
                 <Phone className="w-4 h-4" />
                 <span className="text-sm hidden lg:inline">0208 567 8550</span>
               </div>
-              <button 
+              {/* Account Button */}
+              {customer ? (
+                <Link
+                  to="/account/profile"
+                  className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                    {customer.firstName?.[0]?.toUpperCase()}
+                  </div>
+                  <span className="hidden sm:inline max-w-[80px] truncate">{customer.firstName}</span>
+                </Link>
+              ) : (
+                <Link
+                  to="/account"
+                  className="flex items-center gap-1.5 text-gray-700 hover:text-blue-600 text-sm font-medium transition-colors"
+                >
+                  <User className="w-4 h-4" />
+                  <span className="hidden sm:inline">Sign In</span>
+                </Link>
+              )}
+              <button
                 onClick={() => setIsCartOpen(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded text-sm font-medium flex items-center gap-2 relative"
               >
