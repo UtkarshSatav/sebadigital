@@ -51,8 +51,12 @@ export function Checkout() {
 
   // Validates the form before showing PayPal buttons
   const handleProceedToPayment = () => {
-    if (!formData.email || !formData.firstName || !formData.lastName) {
+    if (!formData.email || !formData.phone) {
       toast.error('Please fill in your contact information');
+      return;
+    }
+    if (deliveryMethod !== 'collect' && (!formData.firstName || !formData.lastName)) {
+      toast.error('Please fill in your name');
       return;
     }
     if (deliveryMethod !== 'collect' && (!formData.address || !formData.city || !formData.postcode)) {

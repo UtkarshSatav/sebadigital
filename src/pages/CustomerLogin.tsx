@@ -48,6 +48,19 @@ export function CustomerLogin() {
             setLoading(true);
             if (mode === 'login') {
                 await signIn(form.email, form.password);
+
+                // Redirect admins directly to the admin portal
+                const { getCurrentUser, isStaffOrAdmin } = await import('../services/authService');
+                const currentUser = getCurrentUser();
+                if (currentUser) {
+                    const hasAdminAccess = await isStaffOrAdmin(currentUser.uid);
+                    if (hasAdminAccess) {
+                        toast.success('Welcome back, Admin!');
+                        navigate('/admin');
+                        return;
+                    }
+                }
+
                 toast.success('Welcome back!');
             } else {
                 await register(form.email, form.password, form.firstName, form.lastName, form.phone);
