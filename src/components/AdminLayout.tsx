@@ -15,6 +15,7 @@ import {
     ChevronRight,
     Menu,
     X,
+    Monitor,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
     { path: '/admin/returns', label: 'Returns', icon: RotateCcw },
     { path: '/admin/media-transfers', label: 'Media Transfers', icon: Film },
     { path: '/admin/cms', label: 'CMS Content', icon: FileText },
+    { path: '/admin/page-editor', label: 'Page Editor', icon: Monitor },
     { path: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -89,8 +91,8 @@ export function AdminLayout() {
                                     to={item.path}
                                     onClick={() => setSidebarOpen(false)}
                                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${active
-                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
-                                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                                        : 'text-gray-400 hover:text-white hover:bg-white/5'
                                         }`}
                                 >
                                     <Icon className="w-5 h-5 flex-shrink-0" />

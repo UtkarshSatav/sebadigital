@@ -108,6 +108,7 @@ export function Header() {
               <Link to="/products/phones" className="text-gray-700 hover:text-blue-600 text-sm py-2">Phones</Link>
               <Link to="/products/headphones" className="text-gray-700 hover:text-blue-600 text-sm py-2">Headphones</Link>
               <Link to="/products/accessories" className="text-gray-700 hover:text-blue-600 text-sm py-2">Accessories</Link>
+              <Link to="/products/blank-media" className="text-gray-700 hover:text-blue-600 text-sm py-2">Blank Media</Link>
               <div className="border-t border-gray-200 my-2"></div>
               <Link to="/about" className="text-gray-700 hover:text-blue-600 text-sm py-2">About Us</Link>
               <Link to="/promotions" className="text-gray-700 hover:text-blue-600 text-sm py-2">Promotions</Link>

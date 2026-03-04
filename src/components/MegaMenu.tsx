@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import { Tv, Camera, Music, CardSim, Smartphone, Headphones, Cable } from 'lucide-react';
+import { Tv, Camera, Music, CardSim, Smartphone, Headphones, Cable, Disc } from 'lucide-react';
 
 const categories = [
   {
@@ -43,6 +43,12 @@ const categories = [
     slug: 'accessories',
     icon: Cable,
     subcategories: ['Cables', 'Adapters', 'USB Hubs', 'Memory Cards', 'Remote Controls', 'Batteries']
+  },
+  {
+    name: 'Blank Media',
+    slug: 'blank-media',
+    icon: Disc,
+    subcategories: ['CD-R', 'DVD and DVD-RAM', 'Mini DVM', 'Audio Tape', 'Mini Disc', 'Blu-ray Disc', 'Video Tape', '8mm and Hi8 Tape']
   },
 ];
 

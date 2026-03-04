@@ -6,10 +6,11 @@ import {
 
 const RAW_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID || '';
 // Use 'sb' (PayPal sandbox) if the Client ID is not yet configured
-const PAYPAL_CLIENT_ID = (RAW_CLIENT_ID && RAW_CLIENT_ID !== 'YOUR_PAYPAL_CLIENT_ID_HERE')
-    ? RAW_CLIENT_ID
+const PAYPAL_CLIENT_ID = (RAW_CLIENT_ID && RAW_CLIENT_ID.trim() !== '' && RAW_CLIENT_ID !== 'YOUR_PAYPAL_CLIENT_ID_HERE')
+    ? RAW_CLIENT_ID.trim()
     : 'sb';
 const IS_SANDBOX = PAYPAL_CLIENT_ID === 'sb';
+const PAYPAL_RECEIVER_EMAIL = import.meta.env.VITE_PAYPAL_RECEIVER_EMAIL || 'sebadigital@hotmail.co.uk';
 const FUNCTIONS_BASE = import.meta.env.VITE_FUNCTIONS_BASE_URL || '';
 
 // ─── PayPal Provider wrapper ─────────────────────────────────────────────────
@@ -25,8 +26,18 @@ export function PayPalProvider({ children }: { children: React.ReactNode }) {
             }}
         >
             {IS_SANDBOX && (
-                <div className="mb-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700 font-medium">
-                    ⚠️ PayPal sandbox mode — add your Client ID to <code className="font-mono">.env</code> for live payments
+                <div className="mb-3 px-4 py-3 bg-amber-50 border border-amber-300 rounded-lg text-sm text-amber-800 font-medium">
+                    ⚠️ <strong>PayPal not yet configured.</strong> Payments are in test/sandbox mode.
+                    <br />
+                    <span className="text-xs font-normal">
+                        To accept live payments, add your PayPal <strong>Live Client ID</strong> to{' '}
+                        <code className="font-mono bg-amber-100 px-1 rounded">.env</code>{' '}as{' '}
+                        <code className="font-mono bg-amber-100 px-1 rounded">VITE_PAYPAL_CLIENT_ID</code>.
+                        Get it at{' '}
+                        <a href="https://developer.paypal.com" target="_blank" rel="noreferrer" className="underline">
+                            developer.paypal.com
+                        </a>.
+                    </span>
                 </div>
             )}
             {children}
@@ -109,7 +120,7 @@ export function PayPalCheckoutButtons({ orderDetails, onSuccess, onError }: PayP
                     },
                 })),
                 payee: {
-                    email_address: import.meta.env.VITE_PAYPAL_RECEIVER_EMAIL || 'sebadigital@hotmail.co.uk',
+                    email_address: PAYPAL_RECEIVER_EMAIL,
                 },
             }],
             application_context: {

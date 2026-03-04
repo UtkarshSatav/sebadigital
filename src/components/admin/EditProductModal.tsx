@@ -2,6 +2,7 @@ import { X, Package } from 'lucide-react';
 import { updateProduct, deleteProduct, calculatePricing, type Product } from '../../services/productService';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import { ImageUploader } from './ImageUploader';
 
 interface EditProductModalProps {
     product: Product;
@@ -9,7 +10,7 @@ interface EditProductModalProps {
     onSaved: () => void;
 }
 
-const CATEGORIES = ['tvs', 'audio', 'headphones', 'media', 'cables', 'accessories', 'batteries', 'computing'];
+const CATEGORIES = ['tvs', 'audio', 'headphones', 'media', 'cables', 'accessories', 'batteries', 'computing', 'blank-media'];
 
 export function EditProductModal({ product, onClose, onSaved }: EditProductModalProps) {
     const [saving, setSaving] = useState(false);
@@ -124,11 +125,11 @@ export function EditProductModal({ product, onClose, onSaved }: EditProductModal
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         </div>
                     </div>
+                    {/* Image Upload + Stock */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-                            <input type="text" value={form.image} onChange={e => upd('image', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
+                            <ImageUploader value={form.image} onChange={(url) => upd('image', url)} folder="products" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Stock Qty</label>

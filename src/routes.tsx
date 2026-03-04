@@ -21,6 +21,7 @@ import { AdminReturns } from './pages/admin/AdminReturns';
 import { AdminMediaTransfers } from './pages/admin/AdminMediaTransfers';
 import { AdminCms } from './pages/admin/AdminCms';
 import { AdminSettings } from './pages/admin/AdminSettings';
+import { AdminPageEditor } from './pages/admin/AdminPageEditor';
 
 import { CustomerLogin } from './pages/CustomerLogin';
 import { CustomerProfile } from './pages/CustomerProfile';
@@ -105,6 +106,7 @@ export const router = createBrowserRouter([
       { path: 'returns', Component: AdminReturns },
       { path: 'media-transfers', Component: AdminMediaTransfers },
       { path: 'cms', Component: AdminCms },
+      { path: 'page-editor', Component: AdminPageEditor },
       { path: 'settings', Component: AdminSettings },
     ],
   },

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Package, Save } from 'lucide-react';
 import { createProduct, calculatePricing, type Product } from '../../services/productService';
 import { toast } from 'sonner';
+import { ImageUploader } from './ImageUploader';
 
 interface AddProductModalProps {
     isOpen: boolean;
@@ -10,7 +11,7 @@ interface AddProductModalProps {
 }
 
 const CATEGORIES = [
-    'tvs', 'audio', 'headphones', 'media', 'cables', 'accessories', 'batteries', 'computing',
+    'tvs', 'audio', 'headphones', 'media', 'cables', 'accessories', 'batteries', 'computing', 'blank-media',
 ];
 
 export function AddProductModal({ isOpen, onClose, onProductAdded }: AddProductModalProps) {
@@ -186,23 +187,19 @@ export function AddProductModal({ isOpen, onClose, onProductAdded }: AddProductM
                         </div>
                     </div>
 
-                    {/* Image + Stock */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-                            <input
-                                type="text" value={form.image} onChange={(e) => updateField('image', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                placeholder="https://..."
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
-                            <input
-                                type="number" value={form.stockQuantity} onChange={(e) => updateField('stockQuantity', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                            />
-                        </div>
+                    {/* Image Upload */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
+                        <ImageUploader value={form.image} onChange={(url) => updateField('image', url)} folder="products" />
+                    </div>
+
+                    {/* Stock */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
+                        <input
+                            type="number" value={form.stockQuantity} onChange={(e) => updateField('stockQuantity', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        />
                     </div>
 
                     {/* Badge */}
@@ -214,8 +211,8 @@ export function AddProductModal({ isOpen, onClose, onProductAdded }: AddProductM
                                     type="button" key={b}
                                     onClick={() => updateField('badge', b)}
                                     className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${form.badge === b
-                                            ? 'bg-blue-600 text-white border-blue-600'
-                                            : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+                                        ? 'bg-blue-600 text-white border-blue-600'
+                                        : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
                                         }`}
                                 >
                                     {b || 'None'}
