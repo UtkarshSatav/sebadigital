@@ -13,6 +13,9 @@ import {
     AlertCircle,
     Check,
     ExternalLink,
+    Search,
+    ShoppingBag,
+    X,
 } from 'lucide-react';
 import {
     getAllCmsContent,
@@ -22,6 +25,7 @@ import {
     type CmsContent,
     type SectionType,
 } from '../../services/cmsService';
+import { getProducts, type Product } from '../../services/productService';
 import { toast } from 'sonner';
 
 // ─── Section label map ────────────────────────────────────────────────────────
@@ -31,7 +35,7 @@ const SECTION_LABELS: Record<SectionType, string> = {
     featured_products: '⭐ Featured Products',
     latest_arrivals: '🆕 Latest Arrivals',
     tv_experts: '📺 TV Experts Section',
-    policy: '📋 Policy Block',
+    policy: '📋 About / Policy Block',
 };
 
 const SECTION_TYPES: SectionType[] = [
@@ -42,6 +46,148 @@ const SECTION_TYPES: SectionType[] = [
     'tv_experts',
     'policy',
 ];
+
+const PRODUCT_PICKER_SECTIONS: SectionType[] = ['featured_products', 'latest_arrivals'];
+
+// ─── ProductPickerPanel ───────────────────────────────────────────────────────
+function ProductPickerPanel({
+    selectedIds,
+    onChange,
+}: {
+    selectedIds: string[];
+    onChange: (ids: string[]) => void;
+}) {
+    const [allProducts, setAllProducts] = useState<Product[]>([]);
+    const [search, setSearch] = useState('');
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        // No isActive filter here — combining where() + orderBy() needs a composite
+        // Firestore index that may not exist. Load all products and filter client-side.
+        getProducts({ limitCount: 500 })
+            .then(({ products }) => setAllProducts(products))
+            .catch(console.error)
+            .finally(() => setLoading(false));
+    }, []);
+
+    const term = search.toLowerCase();
+    const filtered = !term
+        ? allProducts
+        : allProducts.filter(p =>
+            p.title?.toLowerCase().includes(term) ||
+            p.brandName?.toLowerCase().includes(term) ||
+            p.categorySlug?.toLowerCase().includes(term) ||
+            p.sku?.toLowerCase().includes(term) ||
+            p.description?.toLowerCase().includes(term)
+        );
+
+    const toggle = (id: string) => {
+        if (selectedIds.includes(id)) {
+            onChange(selectedIds.filter(s => s !== id));
+        } else if (selectedIds.length < 4) {
+            onChange([...selectedIds, id]);
+        } else {
+            toast.error('You can only select 4 products for this section');
+        }
+    };
+
+    const removeSelected = (id: string) => onChange(selectedIds.filter(s => s !== id));
+    const selectedProducts = allProducts.filter(p => selectedIds.includes(p.id!));
+
+    return (
+        <div className="space-y-4">
+            {/* Selected slots */}
+            <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                    Selected Products ({selectedIds.length}/4)
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                    {Array.from({ length: 4 }).map((_, i) => {
+                        const p = selectedProducts[i];
+                        return (
+                            <div
+                                key={i}
+                                className={`flex items-center gap-2 p-2 rounded-lg border text-xs ${p ? 'border-blue-200 bg-blue-50' : 'border-dashed border-gray-200 bg-gray-50'}`}
+                            >
+                                {p ? (
+                                    <>
+                                        {p.image ? (
+                                            <img src={p.image} alt={p.title} className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                                        ) : (
+                                            <div className="w-8 h-8 rounded bg-gray-200 flex items-center justify-center flex-shrink-0">
+                                                <ShoppingBag className="w-4 h-4 text-gray-400" />
+                                            </div>
+                                        )}
+                                        <span className="flex-1 truncate font-medium text-gray-800">{p.title}</span>
+                                        <button onClick={() => removeSelected(p.id!)} className="text-red-400 hover:text-red-600 flex-shrink-0">
+                                            <X className="w-3.5 h-3.5" />
+                                        </button>
+                                    </>
+                                ) : (
+                                    <span className="text-gray-400 italic">Slot {i + 1} — empty</span>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Search + list */}
+            <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                    Search & Add Products
+                </label>
+                <div className="relative mb-2">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder="Search by name or brand…"
+                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+
+                {loading ? (
+                    <div className="text-center py-6 text-gray-400 text-xs">
+                        <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-1" />
+                        Loading products…
+                    </div>
+                ) : filtered.length === 0 ? (
+                    <div className="text-center py-4 text-gray-400 text-xs">No products found{search ? ` for "${search}"` : ''}</div>
+                ) : (
+                    <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-lg divide-y divide-gray-100">
+                        {filtered.slice(0, 50).map(p => {
+                            const isSelected = selectedIds.includes(p.id!);
+                            return (
+                                <button
+                                    key={p.id}
+                                    type="button"
+                                    onClick={() => toggle(p.id!)}
+                                    className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-50 transition-colors ${isSelected ? 'bg-blue-50' : ''}`}
+                                >
+                                    {p.image ? (
+                                        <img src={p.image} alt={p.title} className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                                    ) : (
+                                        <div className="w-8 h-8 rounded bg-gray-200 flex items-center justify-center flex-shrink-0">
+                                            <ShoppingBag className="w-4 h-4 text-gray-300" />
+                                        </div>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-medium text-gray-800 truncate">{p.title}</p>
+                                        <p className="text-xs text-gray-400">{p.brandName} · £{p.pricing?.sellingPrice?.toFixed(2)}</p>
+                                    </div>
+                                    {isSelected && <Check className="w-4 h-4 text-blue-600 flex-shrink-0" />}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+                <p className="text-xs text-gray-400 mt-1">Showing max 50 results · Select exactly 4</p>
+            </div>
+        </div>
+    );
+}
 
 // ─── Inline Section Editor ────────────────────────────────────────────────────
 function SectionEditor({
@@ -63,6 +209,11 @@ function SectionEditor({
         setDirty(true);
     };
 
+    const updMeta = (key: string, value: any) => {
+        setForm(f => ({ ...f, metadata: { ...(f.metadata || {}), [key]: value } }));
+        setDirty(true);
+    };
+
     const handleSave = async () => {
         setSaving(true);
         try {
@@ -77,6 +228,9 @@ function SectionEditor({
         setForm(section);
         setDirty(false);
     };
+
+    const isProductSection = PRODUCT_PICKER_SECTIONS.includes(section.sectionType);
+    const selectedProductIds: string[] = (form.metadata?.productIds as string[]) || [];
 
     return (
         <div className={`bg-white rounded-xl border-2 transition-colors ${expanded ? 'border-blue-200' : 'border-gray-100'} shadow-sm`}>
@@ -94,9 +248,13 @@ function SectionEditor({
                             Unsaved changes
                         </span>
                     )}
+                    {isProductSection && selectedProductIds.length > 0 && (
+                        <span className="bg-blue-100 text-blue-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                            {selectedProductIds.length}/4 products selected
+                        </span>
+                    )}
                 </div>
                 <div className="flex items-center gap-2">
-                    {/* Active toggle */}
                     <button
                         type="button"
                         onClick={e => { e.stopPropagation(); upd('isActive', !form.isActive); }}
@@ -117,18 +275,33 @@ function SectionEditor({
 
             {expanded && (
                 <div className="px-5 pb-5 space-y-4 border-t border-gray-100">
-                    {/* Title */}
-                    <div className="pt-4">
-                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Heading / Title</label>
+                    {/* ── Product Picker (featured_products / latest_arrivals) ── */}
+                    {isProductSection && (
+                        <div className="pt-4 p-4 bg-blue-50 border border-blue-100 rounded-xl">
+                            <h4 className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                                <ShoppingBag className="w-4 h-4" />
+                                Select Products to Display
+                            </h4>
+                            <ProductPickerPanel
+                                selectedIds={selectedProductIds}
+                                onChange={ids => updMeta('productIds', ids)}
+                            />
+                        </div>
+                    )}
+
+                    {/* Section heading fields */}
+                    <div className={isProductSection ? '' : 'pt-4'}>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                            Section Heading / Title
+                        </label>
                         <input
                             type="text"
                             value={form.title ?? ''}
                             onChange={e => upd('title', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Main heading text"
+                            placeholder="Section title shown on the page"
                         />
                     </div>
-                    {/* Subtitle */}
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Subtitle</label>
                         <input
@@ -139,18 +312,16 @@ function SectionEditor({
                             placeholder="Secondary line of text"
                         />
                     </div>
-                    {/* Description */}
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Body / Description</label>
                         <textarea
-                            rows={4}
+                            rows={3}
                             value={form.description ?? ''}
                             onChange={e => upd('description', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                             placeholder="Main paragraph or body text…"
                         />
                     </div>
-                    {/* CTA + Link */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Button Text</label>
@@ -159,7 +330,7 @@ function SectionEditor({
                                 value={form.ctaText ?? ''}
                                 onChange={e => upd('ctaText', e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="e.g. Shop Now"
+                                placeholder="e.g. View All Products"
                             />
                         </div>
                         <div>
@@ -173,23 +344,23 @@ function SectionEditor({
                             />
                         </div>
                     </div>
-                    {/* Image URL */}
-                    <div>
-                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Image URL</label>
-                        <input
-                            type="url"
-                            value={form.image ?? ''}
-                            onChange={e => upd('image', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="https://..."
-                        />
-                        {form.image && (
-                            <div className="mt-2 rounded-lg overflow-hidden border border-gray-100 h-28 bg-gray-50">
-                                <img src={form.image} alt="preview" className="w-full h-full object-cover" onError={e => (e.currentTarget.style.display = 'none')} />
-                            </div>
-                        )}
-                    </div>
-                    {/* Display Order */}
+                    {!isProductSection && (
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Image URL</label>
+                            <input
+                                type="url"
+                                value={form.image ?? ''}
+                                onChange={e => upd('image', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="https://..."
+                            />
+                            {form.image && (
+                                <div className="mt-2 rounded-lg overflow-hidden border border-gray-100 h-28 bg-gray-50">
+                                    <img src={form.image} alt="preview" className="w-full h-full object-cover" onError={e => (e.currentTarget.style.display = 'none')} />
+                                </div>
+                            )}
+                        </div>
+                    )}
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Display Order</label>
                         <input
@@ -199,7 +370,7 @@ function SectionEditor({
                             onChange={e => upd('displayOrder', parseInt(e.target.value) || 0)}
                             className="w-32 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
-                        <p className="text-xs text-gray-400 mt-1">Lower numbers appear first on the page.</p>
+                        <p className="text-xs text-gray-400 mt-1">Lower numbers appear first.</p>
                     </div>
 
                     {/* Action Bar */}
@@ -228,11 +399,7 @@ function SectionEditor({
                                 disabled={saving || !dirty}
                                 className="px-4 py-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg flex items-center gap-1.5 transition-colors"
                             >
-                                {saving ? (
-                                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                ) : (
-                                    <Check className="w-3.5 h-3.5" />
-                                )}
+                                {saving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                                 {saving ? 'Saving…' : 'Save'}
                             </button>
                         </div>
@@ -283,7 +450,7 @@ export function AdminPageEditor() {
         try {
             await createCmsContent({
                 sectionType: addingType as SectionType,
-                title: 'New Section',
+                title: '',
                 subtitle: '',
                 description: '',
                 ctaText: '',
@@ -341,7 +508,9 @@ export function AdminPageEditor() {
                 <AlertCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-blue-800">
                     <p className="font-medium mb-0.5">Changes are live immediately</p>
-                    <p className="text-blue-600">Click a section panel to expand and edit. Press <strong>Save</strong> on each section to publish your changes.</p>
+                    <p className="text-blue-600">
+                        Click a section to expand and edit. For <strong>Featured Products</strong> and <strong>Latest Arrivals</strong>, use the product picker to choose which products to display.
+                    </p>
                 </div>
             </div>
 
