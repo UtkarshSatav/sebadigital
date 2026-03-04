@@ -11,7 +11,9 @@ interface AddProductModalProps {
 }
 
 const CATEGORIES = [
-    'tvs', 'audio', 'headphones', 'media', 'cables', 'accessories', 'batteries', 'computing', 'blank-media',
+    'tvs', 'audio', 'headphones', 'media', 'cables', 'accessories', 'batteries', 'computing',
+    // Blank Media sub-categories
+    'blank-media', 'cd-r', 'dvd-and-dvd-ram', 'mini-dvm', 'audio-tape', 'mini-disc', 'blu-ray-disc', 'video-tape', '8mm-hi8-tape',
 ];
 
 export function AddProductModal({ isOpen, onClose, onProductAdded }: AddProductModalProps) {

@@ -1,56 +1,72 @@
 import { Link } from 'react-router';
 import { Tv, Camera, Music, CardSim, Smartphone, Headphones, Cable, Disc } from 'lucide-react';
 
-const categories = [
-  {
-    name: 'TVs',
-    slug: 'tvs',
-    icon: Tv,
-    subcategories: ['QLED TVs', 'OLED TVs', 'Smart TVs', '4K Ultra HD', '8K TVs', 'Gaming TVs']
-  },
-  {
-    name: 'Cameras',
-    slug: 'cameras',
-    icon: Camera,
-    subcategories: ['Mirrorless', 'DSLR', 'Action Cameras', 'Compact', 'Camcorders', 'Lenses']
-  },
-  {
-    name: 'Entertainment',
-    slug: 'entertainment',
-    icon: Music,
-    subcategories: ['Home Theater', 'Soundbars', 'Blu-ray Players', 'Streaming Devices', 'Projectors', 'Speakers']
-  },
-  {
-    name: 'Storage Devices',
-    slug: 'storage-devices',
-    icon: CardSim,
-    subcategories: ['USB keys', 'Hard drives', 'Memory cards', 'Micro cards', 'SD cards', 'Flash memory']
-  },
-  {
-    name: 'Phones',
-    slug: 'phones',
-    icon: Smartphone,
-    subcategories: ['Smartphones', 'Feature Phones', 'Phone Cases', 'Screen Protectors', 'Chargers', 'Power Banks']
-  },
-  {
-    name: 'Headphones',
-    slug: 'headphones',
-    icon: Headphones,
-    subcategories: ['Wireless', 'Noise Cancelling', 'In-Ear', 'Over-Ear', 'Gaming', 'Sports']
-  },
-  {
-    name: 'Accessories',
-    slug: 'accessories',
-    icon: Cable,
-    subcategories: ['Cables', 'Adapters', 'USB Hubs', 'Memory Cards', 'Remote Controls', 'Batteries']
-  },
-  {
-    name: 'Blank Media',
-    slug: 'blank-media',
-    icon: Disc,
-    subcategories: ['CD-R', 'DVD and DVD-RAM', 'Mini DVM', 'Audio Tape', 'Mini Disc', 'Blu-ray Disc', 'Video Tape', '8mm and Hi8 Tape']
-  },
-];
+type Subcategory = string | { label: string; slug: string };
+
+const categories: {
+  name: string;
+  slug: string;
+  icon: any;
+  subcategories: Subcategory[];
+}[] = [
+    {
+      name: 'TVs',
+      slug: 'tvs',
+      icon: Tv,
+      subcategories: ['QLED TVs', 'OLED TVs', 'Smart TVs', '4K Ultra HD', '8K TVs', 'Gaming TVs']
+    },
+    {
+      name: 'Cameras',
+      slug: 'cameras',
+      icon: Camera,
+      subcategories: ['Mirrorless', 'DSLR', 'Action Cameras', 'Compact', 'Camcorders', 'Lenses']
+    },
+    {
+      name: 'Entertainment',
+      slug: 'entertainment',
+      icon: Music,
+      subcategories: ['Home Theater', 'Soundbars', 'Blu-ray Players', 'Streaming Devices', 'Projectors', 'Speakers']
+    },
+    {
+      name: 'Storage Devices',
+      slug: 'storage-devices',
+      icon: CardSim,
+      subcategories: ['USB keys', 'Hard drives', 'Memory cards', 'Micro cards', 'SD cards', 'Flash memory']
+    },
+    {
+      name: 'Phones',
+      slug: 'phones',
+      icon: Smartphone,
+      subcategories: ['Smartphones', 'Feature Phones', 'Phone Cases', 'Screen Protectors', 'Chargers', 'Power Banks']
+    },
+    {
+      name: 'Headphones',
+      slug: 'headphones',
+      icon: Headphones,
+      subcategories: ['Wireless', 'Noise Cancelling', 'In-Ear', 'Over-Ear', 'Gaming', 'Sports']
+    },
+    {
+      name: 'Accessories',
+      slug: 'accessories',
+      icon: Cable,
+      subcategories: ['Cables', 'Adapters', 'USB Hubs', 'Memory Cards', 'Remote Controls', 'Batteries']
+    },
+    {
+      name: 'Blank Media',
+      slug: 'blank-media',
+      icon: Disc,
+      subcategories: [
+        { label: 'CD-R', slug: 'cd-r' },
+        { label: 'DVD and DVD-RAM', slug: 'dvd-and-dvd-ram' },
+        { label: 'Mini DVM', slug: 'mini-dvm' },
+        { label: 'Audio Tape', slug: 'audio-tape' },
+        { label: 'Mini Disc', slug: 'mini-disc' },
+        { label: 'Blu-ray Disc', slug: 'blu-ray-disc' },
+        { label: 'Video Tape', slug: 'video-tape' },
+        { label: '8mm and Hi8 Tape', slug: '8mm-hi8-tape' },
+      ]
+    },
+  ];
 
 interface MegaMenuProps {
   onClose: () => void;
@@ -74,17 +90,23 @@ export function MegaMenu({ onClose }: MegaMenuProps) {
                   {category.name}
                 </Link>
                 <ul className="space-y-2">
-                  {category.subcategories.map((sub) => (
-                    <li key={sub}>
-                      <Link
-                        to={`/products/${category.slug}`}
-                        onClick={onClose}
-                        className="text-sm text-gray-600 hover:text-blue-600 hover:translate-x-1 transition-all inline-block"
-                      >
-                        {sub}
-                      </Link>
-                    </li>
-                  ))}
+                  {category.subcategories.map((sub) => {
+                    const label = typeof sub === 'string' ? sub : sub.label;
+                    const to = typeof sub === 'string'
+                      ? `/products/${category.slug}`
+                      : `/products/${sub.slug}`;
+                    return (
+                      <li key={label}>
+                        <Link
+                          to={to}
+                          onClick={onClose}
+                          className="text-sm text-gray-600 hover:text-blue-600 hover:translate-x-1 transition-all inline-block"
+                        >
+                          {label}
+                        </Link>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             );
