@@ -105,7 +105,13 @@ export function calculatePricing(
 
 // ─── Products CRUD ───────────────────────────────────────────────────
 
-/** Get all products (with optional filters) */
+/** Get all products (with optional filters)
+ *
+ * NOTE: Firestore requires composite indexes for multi-field queries.
+ * To avoid index errors, this function uses a SINGLE where clause at a time
+ * and handles isActive filtering client-side. The orderBy is only added
+ * when no other where clauses are present to avoid composite index requirements.
+ */
 export async function getProducts(filters?: {
     categorySlug?: string;
     brandId?: string;
@@ -120,32 +126,26 @@ export async function getProducts(filters?: {
 }): Promise<{ products: Product[]; lastDoc: DocumentSnapshot | null }> {
     const constraints: QueryConstraint[] = [];
 
-    if (filters?.categorySlug) {
-        constraints.push(where('categorySlug', '==', filters.categorySlug));
-    }
-    if (filters?.brandId) {
-        constraints.push(where('brandId', '==', filters.brandId));
-    }
+    // Only one equality filter at a time to avoid composite index requirements.
+    // Priority: flag filters > categorySlug > brandId
     if (filters?.isFeatured !== undefined) {
         constraints.push(where('flags.isFeatured', '==', filters.isFeatured));
-    }
-    if (filters?.isNewArrival !== undefined) {
+    } else if (filters?.isNewArrival !== undefined) {
         constraints.push(where('flags.isNewArrival', '==', filters.isNewArrival));
-    }
-    if (filters?.isOnSale !== undefined) {
+    } else if (filters?.isOnSale !== undefined) {
         constraints.push(where('flags.isOnSale', '==', filters.isOnSale));
-    }
-    if (filters?.isBestSeller !== undefined) {
+    } else if (filters?.isBestSeller !== undefined) {
         constraints.push(where('flags.isBestSeller', '==', filters.isBestSeller));
-    }
-    if (filters?.isPopular !== undefined) {
+    } else if (filters?.isPopular !== undefined) {
         constraints.push(where('flags.isPopular', '==', filters.isPopular));
+    } else if (filters?.categorySlug) {
+        constraints.push(where('categorySlug', '==', filters.categorySlug));
+    } else if (filters?.brandId) {
+        constraints.push(where('brandId', '==', filters.brandId));
+    } else {
+        // No specific filter — safe to add orderBy without composite index
+        constraints.push(orderBy('createdAt', 'desc'));
     }
-    if (filters?.isActive !== undefined) {
-        constraints.push(where('isActive', '==', filters.isActive));
-    }
-
-    constraints.push(orderBy('createdAt', 'desc'));
 
     if (filters?.limitCount) {
         constraints.push(limit(filters.limitCount));
@@ -156,9 +156,14 @@ export async function getProducts(filters?: {
 
     const q = query(productsCol, ...constraints);
     const snapshot = await getDocs(q);
-    const products = snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
-    const lastVisible = snapshot.docs[snapshot.docs.length - 1] || null;
+    let products = snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
 
+    // Client-side isActive filter (avoids composite index requirement)
+    if (filters?.isActive !== undefined) {
+        products = products.filter(p => p.isActive === filters.isActive);
+    }
+
+    const lastVisible = snapshot.docs[snapshot.docs.length - 1] || null;
     return { products, lastDoc: lastVisible };
 }
 

@@ -1,17 +1,49 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router';
-import { Star, ShoppingCart, Truck, Shield, RotateCcw, ChevronLeft, Store, MapPin } from 'lucide-react';
-import { products } from '../data/products';
+import { Star, ShoppingCart, Truck, Shield, RotateCcw, ChevronLeft, Store, MapPin, Loader2 } from 'lucide-react';
+import { getProductById, getProducts, Product } from '../services/productService';
 import { useCart } from '../contexts/CartContext';
 import { toast } from 'sonner';
 
 export function ProductDetail() {
   const { id } = useParams();
-  const product = products.find(p => p.id === Number(id));
+  const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const { addToCart } = useCart();
   const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      try {
+        if (!id) return;
+        const data = await getProductById(id);
+        setProduct(data);
+
+        if (data && data.categorySlug) {
+          const { products: related } = await getProducts({ categorySlug: data.categorySlug, limitCount: 5 });
+          setRelatedProducts(related.filter(p => p.id !== data.id).slice(0, 4));
+        }
+      } catch (err) {
+        console.error('Error fetching product', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -27,14 +59,14 @@ export function ProductDetail() {
   }
 
   // Create gallery with main image plus additional images
-  const gallery = product.gallery || [product.image];
+  const gallery = product.gallery?.length ? product.gallery : [product.image];
 
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) {
       addToCart({
-        id: product.id,
+        id: product.id!,
         title: product.title,
-        price: product.price,
+        price: product.pricing?.sellingPrice || 0,
         image: product.image,
       });
     }
@@ -46,9 +78,9 @@ export function ProductDetail() {
   const handleCollectAtStore = () => {
     for (let i = 0; i < quantity; i++) {
       addToCart({
-        id: product.id,
+        id: product.id!,
         title: product.title,
-        price: product.price,
+        price: product.pricing?.sellingPrice || 0,
         image: product.image,
       });
     }
@@ -58,10 +90,6 @@ export function ProductDetail() {
     navigate('/checkout?method=collect');
   };
 
-  const relatedProducts = products
-    .filter(p => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
-
   return (
     <div className="min-h-screen bg-white">
       {/* Breadcrumb */}
@@ -70,8 +98,8 @@ export function ProductDetail() {
           <div className="flex items-center gap-2 text-sm">
             <Link to="/" className="text-gray-600 hover:text-blue-600">Home</Link>
             <span className="text-gray-400">/</span>
-            <Link to={`/products/${product.category}`} className="text-gray-600 hover:text-blue-600 capitalize">
-              {product.category}
+            <Link to={`/products/${product.categorySlug}`} className="text-gray-600 hover:text-blue-600 capitalize">
+              {product.categorySlug}
             </Link>
             <span className="text-gray-400">/</span>
             <span className="text-gray-900 truncate">{product.title}</span>
@@ -82,11 +110,11 @@ export function ProductDetail() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Back Button */}
         <Link
-          to={`/products/${product.category}`}
+          to={`/products/${product.categorySlug}`}
           className="inline-flex items-center gap-2 text-gray-600 hover:text-blue-600 mb-6 text-sm"
         >
           <ChevronLeft className="w-4 h-4" />
-          Back to {product.category}
+          Back to {product.categorySlug}
         </Link>
 
         {/* Product Content */}
@@ -104,7 +132,7 @@ export function ProductDetail() {
                 </div>
               )}
               <img
-                src={gallery[selectedImage]}
+                src={gallery[selectedImage] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80'}
                 alt={product.title}
                 className="w-full h-full object-cover"
               />
@@ -144,7 +172,7 @@ export function ProductDetail() {
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`w-5 h-5 ${i < Math.floor(product.rating)
+                        className={`w-5 h-5 ${i < Math.floor(product.rating || 0)
                           ? 'fill-yellow-400 text-yellow-400'
                           : 'text-gray-300'
                           }`}
@@ -153,28 +181,32 @@ export function ProductDetail() {
                   </div>
                   <span className="text-lg font-semibold">{product.rating}</span>
                 </div>
-                <span className="text-gray-500">({product.reviews} reviews)</span>
+                <span className="text-gray-500">({product.reviewCount} reviews)</span>
               </div>
 
               <div className="flex items-baseline gap-3 mb-6">
                 <span className="text-4xl font-bold text-blue-600">
-                  £{product.price.toFixed(2)}
+                  £{product.pricing?.sellingPrice?.toFixed(2) || '0.00'}
                 </span>
-                <span className="text-xl text-gray-500 line-through">
-                  £{product.originalPrice.toFixed(2)}
-                </span>
-                <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-semibold">
-                  Save £{(product.originalPrice - product.price).toFixed(2)}
-                </span>
+                {product.pricing?.originalPrice > product.pricing?.sellingPrice && (
+                  <>
+                    <span className="text-xl text-gray-500 line-through">
+                      £{product.pricing?.originalPrice?.toFixed(2)}
+                    </span>
+                    <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-semibold">
+                      Save £{(product.pricing?.originalPrice - product.pricing?.sellingPrice).toFixed(2)}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
 
             {/* Product Description */}
             <div className="border-t border-b border-gray-200 py-6">
               <h3 className="font-semibold text-gray-900 mb-3">Product Description</h3>
-              <p className="text-gray-700 leading-relaxed">
-                {(product as any).description ||
-                  `Experience premium quality with the ${product.title}. This exceptional product combines cutting-edge technology with outstanding performance, delivering exceptional value for your investment. Perfect for those who demand the best in ${product.category}.`
+              <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                {product.description ||
+                  `Experience premium quality with the ${product.title}. This exceptional product combines cutting-edge technology with outstanding performance, delivering exceptional value for your investment. Perfect for those who demand the best in ${product.categorySlug}.`
                 }
               </p>
             </div>
@@ -183,13 +215,13 @@ export function ProductDetail() {
             <div className="space-y-3">
               <h3 className="font-semibold text-gray-900">Key Features</h3>
               <ul className="space-y-2">
-                {((product as any).features || [
+                {[
                   'Premium build quality and materials',
                   'Latest technology and innovation',
                   'Energy efficient design',
                   'Easy to use and set up',
                   'Comprehensive warranty included'
-                ]).map((feature: string, index: number) => (
+                ].map((feature: string, index: number) => (
                   <li key={index} className="flex items-start gap-2 text-gray-700">
                     <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2 flex-shrink-0" />
                     <span>{feature}</span>
@@ -282,7 +314,7 @@ export function ProductDetail() {
                 >
                   <div className="relative overflow-hidden bg-gray-100">
                     <img
-                      src={relatedProduct.image}
+                      src={relatedProduct.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80'}
                       alt={relatedProduct.title}
                       className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                     />
@@ -296,7 +328,7 @@ export function ProductDetail() {
                       <span className="text-sm font-medium">{relatedProduct.rating}</span>
                     </div>
                     <span className="text-xl font-bold text-blue-600">
-                      £{relatedProduct.price.toFixed(2)}
+                      £{relatedProduct.pricing?.sellingPrice?.toFixed(2) || '0.00'}
                     </span>
                   </div>
                 </Link>

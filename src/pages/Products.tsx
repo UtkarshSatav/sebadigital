@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { Star, ShoppingCart, Store, Disc } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Star, ShoppingCart, Store, Disc, Loader2 } from 'lucide-react';
 import { useParams, Link, useNavigate } from 'react-router';
-import { products } from '../data/products';
+import { getProducts, Product } from '../services/productService';
 import { useCart } from '../contexts/CartContext';
 import { toast } from 'sonner';
 
@@ -35,28 +35,47 @@ export function Products() {
   const { category } = useParams();
   const { addToCart } = useCart();
   const navigate = useNavigate();
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredProducts = category
-    ? products.filter(p => p.category === category)
-    : products;
+  useEffect(() => {
+    async function loadProducts() {
+      setLoading(true);
+      try {
+        const filters: any = {};
+        if (category && category !== BLANK_MEDIA_PARENT) {
+          filters.categorySlug = category;
+        }
+        // isActive is filtered client-side inside productService to avoid Firestore composite index requirement
+        const { products } = await getProducts(filters);
+        setFilteredProducts(products);
+      } catch (err) {
+        console.error('Error loading products', err);
+        toast.error('Failed to load products');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadProducts();
+  }, [category]);
 
   const categoryTitle = formatCategoryTitle(category);
 
-  const handleAddToCart = (product: any) => {
+  const handleAddToCart = (product: Product) => {
     addToCart({
-      id: product.id,
+      id: product.id!,
       title: product.title,
-      price: product.price,
+      price: product.pricing?.sellingPrice || 0,
       image: product.image,
     });
     toast.success('Item added to cart', { description: product.title });
   };
 
-  const handleCollectAtStore = (product: any) => {
+  const handleCollectAtStore = (product: Product) => {
     addToCart({
-      id: product.id,
+      id: product.id!,
       title: product.title,
-      price: product.price,
+      price: product.pricing?.sellingPrice || 0,
       image: product.image,
     });
     toast.success('Item added — Click & Collect selected', {
@@ -128,97 +147,107 @@ export function Products() {
         {/* ── Sub-category or regular category → show products ───────────────── */}
         {!isBlankMediaParent && (
           <>
-            <div className="mb-6">
-              <p className="text-gray-600">
-                Showing {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
-              </p>
-            </div>
-
-            {filteredProducts.length === 0 ? (
-              <div className="text-center py-24">
-                <Disc className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-gray-700 mb-2">No products yet</h3>
-                <p className="text-gray-400 mb-6">
-                  Products for <strong>{categoryTitle}</strong> haven't been added yet.
-                </p>
-                {isBlankMediaSub && (
-                  <Link
-                    to="/products/blank-media"
-                    className="inline-flex items-center gap-2 text-blue-600 hover:underline text-sm font-medium"
-                  >
-                    ← Back to Blank Media
-                  </Link>
-                )}
+            {loading ? (
+              <div className="flex items-center justify-center py-24">
+                <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
               </div>
             ) : (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredProducts.map((product) => (
-                  <div
-                    key={product.id}
-                    className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-xl transition-shadow group"
-                  >
-                    <Link to={`/product/${product.id}`}>
-                      <div className="relative overflow-hidden bg-gray-100">
-                        {product.badge && (
-                          <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold z-10 ${product.badge === 'SALE' ? 'bg-red-500 text-white' :
-                              product.badge === 'HOT' ? 'bg-orange-500 text-white' :
-                                'bg-green-500 text-white'
-                            }`}>
-                            {product.badge}
-                          </div>
-                        )}
-                        <img
-                          src={product.image}
-                          alt={product.title}
-                          className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                    </Link>
+              <>
+                <div className="mb-6">
+                  <p className="text-gray-600">
+                    Showing {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
+                  </p>
+                </div>
 
-                    <div className="p-4">
-                      <Link to={`/product/${product.id}`}>
-                        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 min-h-[3rem] hover:text-blue-600 transition-colors">
-                          {product.title}
-                        </h3>
+                {filteredProducts.length === 0 ? (
+                  <div className="text-center py-24">
+                    <Disc className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-gray-700 mb-2">No products yet</h3>
+                    <p className="text-gray-400 mb-6">
+                      Products for <strong>{categoryTitle}</strong> haven't been added yet.
+                    </p>
+                    {isBlankMediaSub && (
+                      <Link
+                        to="/products/blank-media"
+                        className="inline-flex items-center gap-2 text-blue-600 hover:underline text-sm font-medium"
+                      >
+                        ← Back to Blank Media
                       </Link>
-
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-medium">{product.rating}</span>
-                        </div>
-                        <span className="text-xs text-gray-500">({product.reviews} reviews)</span>
-                      </div>
-
-                      <div className="flex items-baseline gap-2 mb-4">
-                        <span className="text-2xl font-bold text-blue-600">
-                          £{product.price.toFixed(2)}
-                        </span>
-                        <span className="text-sm text-gray-500 line-through">
-                          £{product.originalPrice.toFixed(2)}
-                        </span>
-                      </div>
-
-                      <div className="space-y-2">
-                        <button
-                          onClick={() => handleAddToCart(product)}
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded font-medium flex items-center justify-center gap-2 transition-colors"
-                        >
-                          <ShoppingCart className="w-4 h-4" />
-                          Add to Cart
-                        </button>
-                        <button
-                          onClick={() => handleCollectAtStore(product)}
-                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded font-medium flex items-center justify-center gap-2 transition-colors"
-                        >
-                          <Store className="w-4 h-4" />
-                          Collect at Store
-                        </button>
-                      </div>
-                    </div>
+                    )}
                   </div>
-                ))}
-              </div>
+                ) : (
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {filteredProducts.map((product) => (
+                      <div
+                        key={product.id}
+                        className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-xl transition-shadow group"
+                      >
+                        <Link to={`/product/${product.id}`}>
+                          <div className="relative overflow-hidden bg-gray-100">
+                            {product.badge && (
+                              <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold z-10 ${product.badge === 'SALE' ? 'bg-red-500 text-white' :
+                                product.badge === 'HOT' ? 'bg-orange-500 text-white' :
+                                  'bg-green-500 text-white'
+                                }`}>
+                                {product.badge}
+                              </div>
+                            )}
+                            <img
+                              src={product.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80'}
+                              alt={product.title}
+                              className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          </div>
+                        </Link>
+
+                        <div className="p-4">
+                          <Link to={`/product/${product.id}`}>
+                            <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 min-h-[3rem] hover:text-blue-600 transition-colors">
+                              {product.title}
+                            </h3>
+                          </Link>
+
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="flex items-center gap-1">
+                              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                              <span className="text-sm font-medium">{product.rating}</span>
+                            </div>
+                            <span className="text-xs text-gray-500">({product.reviewCount} reviews)</span>
+                          </div>
+
+                          <div className="flex items-baseline gap-2 mb-4">
+                            <span className="text-2xl font-bold text-blue-600">
+                              £{product.pricing?.sellingPrice?.toFixed(2) || '0.00'}
+                            </span>
+                            {product.pricing?.originalPrice > product.pricing?.sellingPrice && (
+                              <span className="text-sm text-gray-500 line-through">
+                                £{product.pricing?.originalPrice?.toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <button
+                              onClick={() => handleAddToCart(product)}
+                              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded font-medium flex items-center justify-center gap-2 transition-colors"
+                            >
+                              <ShoppingCart className="w-4 h-4" />
+                              Add to Cart
+                            </button>
+                            <button
+                              onClick={() => handleCollectAtStore(product)}
+                              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded font-medium flex items-center justify-center gap-2 transition-colors"
+                            >
+                              <Store className="w-4 h-4" />
+                              Collect at Store
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
