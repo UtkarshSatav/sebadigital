@@ -61,7 +61,14 @@ export function ProductDetail() {
   // Create gallery with main image plus additional images
   const gallery = product.gallery?.length ? product.gallery : [product.image];
 
+  const isOutOfStock = product.stock?.status === 'out_of_stock' || (product.stock?.quantity ?? 0) <= 0;
+  const isLowStock = !isOutOfStock && (product.stock?.status === 'low_stock' || (product.stock?.quantity ?? 0) <= (product.stock?.lowStockThreshold ?? 5));
+
   const handleAddToCart = () => {
+    if (isOutOfStock) {
+      toast.error('This item is currently out of stock');
+      return;
+    }
     for (let i = 0; i < quantity; i++) {
       addToCart({
         id: product.id!,
@@ -76,6 +83,10 @@ export function ProductDetail() {
   };
 
   const handleCollectAtStore = () => {
+    if (isOutOfStock) {
+      toast.error('This item is currently out of stock');
+      return;
+    }
     for (let i = 0; i < quantity; i++) {
       addToCart({
         id: product.id!,
@@ -123,7 +134,11 @@ export function ProductDetail() {
           <div className="space-y-4">
             {/* Main Image */}
             <div className="relative bg-gray-100 rounded-lg overflow-hidden aspect-square">
-              {product.badge && (
+              {isOutOfStock ? (
+                <div className="absolute top-4 left-4 px-4 py-2 rounded-full text-sm font-bold z-10 bg-gray-500 text-white">
+                  OUT OF STOCK
+                </div>
+              ) : product.badge && (
                 <div className={`absolute top-4 left-4 px-4 py-2 rounded-full text-sm font-bold z-10 ${product.badge === 'SALE' ? 'bg-red-500 text-white' :
                   product.badge === 'HOT' ? 'bg-orange-500 text-white' :
                     'bg-green-500 text-white'
@@ -199,6 +214,26 @@ export function ProductDetail() {
                   </>
                 )}
               </div>
+
+              {/* Stock Status */}
+              <div className="mb-6">
+                {isOutOfStock ? (
+                  <span className="text-red-600 font-bold flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-red-600" />
+                    Out of Stock - Currently Unavailable
+                  </span>
+                ) : isLowStock ? (
+                  <span className="text-orange-600 font-bold flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-orange-600 animate-pulse" />
+                    Low Stock - Only {product.stock?.quantity} left!
+                  </span>
+                ) : (
+                  <span className="text-green-600 font-bold flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-green-600" />
+                    In Stock - Available for Immediate Dispatch
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Product Description */}
@@ -231,19 +266,21 @@ export function ProductDetail() {
             </div>
 
             {/* Quantity Selector */}
-            <div className="flex items-center gap-4">
+            <div className={`flex items-center gap-4 ${isOutOfStock ? 'opacity-50 pointer-events-none' : ''}`}>
               <label className="font-semibold text-gray-900">Quantity:</label>
               <div className="flex items-center border border-gray-300 rounded">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="px-4 py-2 hover:bg-gray-100 transition-colors"
+                  disabled={isOutOfStock}
+                  className="px-4 py-2 hover:bg-gray-100 transition-colors disabled:cursor-not-allowed"
                 >
                   -
                 </button>
                 <span className="px-6 py-2 border-x border-gray-300 font-semibold">{quantity}</span>
                 <button
-                  onClick={() => setQuantity(Math.min(10, quantity + 1))}
-                  className="px-4 py-2 hover:bg-gray-100 transition-colors"
+                  onClick={() => setQuantity(Math.min(product.stock?.quantity || 10, quantity + 1))}
+                  disabled={isOutOfStock}
+                  className="px-4 py-2 hover:bg-gray-100 transition-colors disabled:cursor-not-allowed"
                 >
                   +
                 </button>
@@ -254,17 +291,25 @@ export function ProductDetail() {
             <div className="space-y-3">
               <button
                 onClick={handleAddToCart}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-lg font-semibold text-lg flex items-center justify-center gap-3 transition-colors"
+                disabled={isOutOfStock}
+                className={`w-full py-4 rounded-lg font-semibold text-lg flex items-center justify-center gap-3 transition-colors ${isOutOfStock
+                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
               >
                 <ShoppingCart className="w-6 h-6" />
-                Add to Cart
+                {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
               </button>
               <button
                 onClick={handleCollectAtStore}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-lg font-semibold text-lg flex items-center justify-center gap-3 transition-colors"
+                disabled={isOutOfStock}
+                className={`w-full py-4 rounded-lg font-semibold text-lg flex items-center justify-center gap-3 transition-colors ${isOutOfStock
+                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                  }`}
               >
                 <Store className="w-6 h-6" />
-                Collect at Store — FREE
+                {isOutOfStock ? 'Unavailable' : 'Collect at Store — FREE'}
               </button>
             </div>
 

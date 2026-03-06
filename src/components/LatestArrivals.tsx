@@ -51,31 +51,46 @@ export function LatestArrivals() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {useFirestore
-            ? firestoreProducts.map((product) => (
-              <Link
-                key={product.id}
-                to={`/product/${product.id}`}
-                className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group block"
-              >
-                <div className="relative bg-gray-50 h-48 flex items-center justify-center overflow-hidden">
-                  {product.badge && (
-                    <span className="absolute top-4 left-4 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold z-10">
-                      {product.badge}
-                    </span>
-                  )}
-                  {product.image ? (
-                    <img src={product.image} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  ) : (
-                    <ShoppingBag className="w-12 h-12 text-gray-300" />
-                  )}
-                </div>
-                <div className="p-5">
-                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{product.title}</h3>
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">{product.description}</p>
-                  <span className="text-2xl font-bold text-blue-600">£{product.pricing?.sellingPrice?.toFixed(2)}</span>
-                </div>
-              </Link>
-            ))
+            ? firestoreProducts.map((product) => {
+                const isOutOfStock = product.stock?.status === 'out_of_stock' || (product.stock?.quantity ?? 0) <= 0;
+                return (
+                  <Link
+                    key={product.id}
+                    to={`/product/${product.id}`}
+                    className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group block"
+                  >
+                    <div className="relative bg-gray-50 h-48 flex items-center justify-center overflow-hidden">
+                      {isOutOfStock ? (
+                        <span className="absolute top-4 left-4 bg-gray-500 text-white px-3 py-1 rounded-full text-xs font-semibold z-10 shadow-sm">
+                          OUT OF STOCK
+                        </span>
+                      ) : product.badge && (
+                        <span className="absolute top-4 left-4 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold z-10">
+                          {product.badge}
+                        </span>
+                      )}
+                      {product.image ? (
+                        <img
+                          src={product.image}
+                          alt={product.title}
+                          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${isOutOfStock ? 'grayscale opacity-60' : ''
+                            }`}
+                        />
+                      ) : (
+                        <ShoppingBag className={`w-12 h-12 text-gray-300 ${isOutOfStock ? 'grayscale opacity-40' : ''}`} />
+                      )}
+                    </div>
+                    <div className="p-5">
+                      <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{product.title}</h3>
+                      <p className="text-sm text-gray-600 mb-4 line-clamp-2">{product.description}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl font-bold text-blue-600">£{product.pricing?.sellingPrice?.toFixed(2)}</span>
+                        {isOutOfStock && <span className="text-xs font-bold text-red-600 uppercase">Unavailable</span>}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })
             : HARDCODED_DEFAULTS.map((product, index) => (
               <div key={index} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="relative bg-gray-50">

@@ -15,6 +15,7 @@ import {
 import { toast } from 'sonner';
 import { createOrder, calculateLineItem, calculateOrderPricing, getShippingFee } from '../services/orderService';
 import { PayPalProvider, PayPalCheckoutButtons } from '../services/paypalService';
+import { getProductById } from '../services/productService';
 
 type DeliveryMethod = 'standard' | 'nextday' | 'collect';
 
@@ -50,7 +51,7 @@ export function Checkout() {
   };
 
   // Validates the form before showing PayPal buttons
-  const handleProceedToPayment = () => {
+  const handleProceedToPayment = async () => {
     if (!formData.email || !formData.phone) {
       toast.error('Please fill in your contact information');
       return;
@@ -67,6 +68,33 @@ export function Checkout() {
       toast.error('Please accept the terms and conditions');
       return;
     }
+
+    // Final inventory check before payment
+    try {
+      const stockChecks = await Promise.all(cart.map(item => getProductById(String(item.id))));
+      const outOfStockItems: string[] = [];
+
+      for (let i = 0; i < cart.length; i++) {
+        const product = stockChecks[i];
+        const cartItem = cart[i];
+
+        if (!product || product.stock?.status === 'out_of_stock' || (product.stock?.quantity ?? 0) < cartItem.quantity) {
+          outOfStockItems.push(cartItem.title);
+        }
+      }
+
+      if (outOfStockItems.length > 0) {
+        toast.error('Some items in your cart are no longer available in the requested quantity', {
+          description: `Unavailable: ${outOfStockItems.join(', ')}`
+        });
+        return;
+      }
+    } catch (err) {
+      console.error('Stock verification failed', err);
+      toast.error('Unable to verify stock levels. Please try again.');
+      return;
+    }
+
     setReadyToPay(true);
   };
 
