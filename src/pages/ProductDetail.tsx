@@ -220,7 +220,7 @@ export function ProductDetail() {
                 {isOutOfStock ? (
                   <span className="text-red-600 font-bold flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-red-600" />
-                    Out of Stock - Available Soon
+                    Out of Stock - Restocking Soon
                   </span>
                 ) : isLowStock ? (
                   <span className="text-orange-600 font-bold flex items-center gap-2">
@@ -309,7 +309,7 @@ export function ProductDetail() {
                   }`}
               >
                 <Store className="w-6 h-6" />
-                {isOutOfStock ? 'Available Soon' : 'Collect at Store — FREE'}
+                {isOutOfStock ? 'Restocking Soon' : 'Collect at Store — FREE'}
               </button>
             </div>
 

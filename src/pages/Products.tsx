@@ -265,7 +265,7 @@ export function Products() {
                                   }`}
                               >
                                 <Store className="w-4 h-4" />
-                                {isOutOfStock ? 'Available Soon' : 'Collect at Store'}
+                                {isOutOfStock ? 'Restocking Soon' : 'Collect at Store'}
                               </button>
                             </div>
                           </div>

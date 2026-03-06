@@ -85,7 +85,7 @@ export function LatestArrivals() {
                       <p className="text-sm text-gray-600 mb-4 line-clamp-2">{product.description}</p>
                       <div className="flex items-center justify-between">
                         <span className="text-2xl font-bold text-blue-600">£{product.pricing?.sellingPrice?.toFixed(2)}</span>
-                        {isOutOfStock && <span className="text-xs font-bold text-red-600 uppercase">Available Soon</span>}
+                        {isOutOfStock && <span className="text-xs font-bold text-red-600 uppercase">Restocking Soon</span>}
                       </div>
                     </div>
                   </Link>
