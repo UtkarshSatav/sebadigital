@@ -88,7 +88,7 @@ export function FeaturedProducts() {
                         {product.pricing?.originalPrice && product.pricing.originalPrice > product.pricing.sellingPrice && (
                           <span className="text-sm text-gray-400 line-through">£{product.pricing.originalPrice.toFixed(2)}</span>
                         )}
-                        {isOutOfStock && <span className="ml-auto text-xs font-bold text-red-600 uppercase">Unavailable</span>}
+                        {isOutOfStock && <span className="ml-auto text-xs font-bold text-red-600 uppercase">Available Soon</span>}
                       </div>
                     </div>
                   </Link>

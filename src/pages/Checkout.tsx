@@ -85,7 +85,7 @@ export function Checkout() {
 
       if (outOfStockItems.length > 0) {
         toast.error('Some items in your cart are no longer available in the requested quantity', {
-          description: `Unavailable: ${outOfStockItems.join(', ')}`
+          description: `Available Soon: ${outOfStockItems.join(', ')}`
         });
         return;
       }
