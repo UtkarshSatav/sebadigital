@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router';
 import { Mail, Lock, User, Phone, Eye, EyeOff, ShoppingBag, ArrowRight, LogIn } from 'lucide-react';
 import { useCustomerAuth } from '../contexts/CustomerAuthContext';
 import { toast } from 'sonner';
+import { ScrollToTop } from '../components/ScrollToTop';
 
 export function CustomerLogin() {
     const { signIn, register } = useCustomerAuth();
@@ -81,6 +82,7 @@ export function CustomerLogin() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex">
+            <ScrollToTop />
             {/* Left panel — branding */}
             <div className="hidden lg:flex flex-col justify-between w-1/2 bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 p-12 text-white relative overflow-hidden">
                 {/* Background decoration */}

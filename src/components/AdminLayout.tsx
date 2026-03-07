@@ -1,4 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router';
+import { ScrollToTop } from './ScrollToTop';
 import { useAuth } from '../contexts/AuthContext';
 import {
     LayoutDashboard,
@@ -50,6 +51,7 @@ export function AdminLayout() {
 
     return (
         <div className="min-h-screen bg-gray-50 flex">
+            <ScrollToTop />
             {/* Mobile Overlay */}
             {sidebarOpen && (
                 <div

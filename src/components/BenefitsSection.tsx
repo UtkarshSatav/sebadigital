@@ -4,8 +4,8 @@ export function BenefitsSection() {
   const benefits = [
     {
       icon: Truck,
-      title: 'Free Shipping',
-      description: 'On orders over £50. Fast, reliable delivery to your door.',
+      title: 'Free Delivery',
+      description: 'On all orders, Reliable delivery to your door',
       color: 'text-blue-600 bg-blue-50',
     },
     {

@@ -3,6 +3,7 @@ import { Mail, ArrowLeft, Send } from 'lucide-react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 import { resetCustomerPassword } from '../services/authService';
+import { ScrollToTop } from '../components/ScrollToTop';
 
 export function CustomerForgotPassword() {
     const [email, setEmail] = useState('');
@@ -28,6 +29,7 @@ export function CustomerForgotPassword() {
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+            <ScrollToTop />
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="flex justify-center mb-6">
                     <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">

@@ -298,7 +298,7 @@ export function ProductDetail() {
                   }`}
               >
                 <ShoppingCart className="w-6 h-6" />
-                {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+                {isOutOfStock ? 'Available Soon' : 'Add to Cart'}
               </button>
               <button
                 onClick={handleCollectAtStore}
@@ -330,7 +330,7 @@ export function ProductDetail() {
               <div className="text-center">
                 <Truck className="w-8 h-8 text-blue-600 mx-auto mb-2" />
                 <p className="text-sm font-medium text-gray-900">Free Delivery</p>
-                <p className="text-xs text-gray-600">On orders over £50</p>
+                <p className="text-xs text-gray-600">On all orders</p>
               </div>
               <div className="text-center">
                 <Shield className="w-8 h-8 text-blue-600 mx-auto mb-2" />

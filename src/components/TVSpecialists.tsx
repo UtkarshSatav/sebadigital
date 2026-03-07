@@ -34,7 +34,7 @@ export function TVSpecialists() {
                 <Sparkles className="w-4 h-4" />
               </div>
               <span className="text-sm font-semibold uppercase">
-                {cmsData?.subtitle || 'TV Experts'}
+                {cmsData?.subtitle || 'EXPERTS'}
               </span>
             </div>
 
@@ -44,25 +44,33 @@ export function TVSpecialists() {
 
             <p className="text-gray-600 mb-8 leading-relaxed whitespace-pre-line">
               {cmsData?.description ||
-                "For many years, we've proudly served our local community with expert electronic service and excellent value on the latest television technology and accessories."}
+                `For many years, we have proudly served our local community with professional electronic services, offering expert advice and excellent value on the latest television technology and accessories.
+
+TV Installation & Wall Mounting
+We take pride in delivering high-quality workmanship with every installation, ensuring your television is safely and professionally mounted.
+
+Local Service Only – Covering areas within 7 miles of our location.`}
             </p>
 
-            <div className="space-y-3 mb-8">
-              {features.map((feature, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Check className="w-3 h-3 text-blue-600" />
+            <div className="mb-4">
+              <h4 className="font-bold text-gray-900 mb-4">We Supply & Support:</h4>
+              <div className="space-y-3">
+                {features.map((feature, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3 h-3 text-blue-600" />
+                    </div>
+                    <span className="text-gray-700">{feature}</span>
                   </div>
-                  <span className="text-gray-700">{feature}</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
             <Link
-              to={cmsData?.ctaLink || '/products/tvs'}
-              className="inline-flex bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded font-medium items-center gap-2 transition-colors"
+              to={cmsData?.ctaLink || '/contact'}
+              className="inline-flex bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded font-medium items-center gap-2 transition-colors mt-4"
             >
-              {cmsData?.ctaText || 'View TV Collection'}
+              {cmsData?.ctaText || 'Contact Us'}
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>

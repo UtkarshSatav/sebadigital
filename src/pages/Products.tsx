@@ -254,7 +254,7 @@ export function Products() {
                                   }`}
                               >
                                 <ShoppingCart className="w-4 h-4" />
-                                {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+                                {isOutOfStock ? 'Available Soon' : 'Add to Cart'}
                               </button>
                               <button
                                 onClick={() => handleCollectAtStore(product)}

@@ -4,6 +4,7 @@ import {
     ExternalLink, AlertCircle, ArrowLeft, Store
 } from 'lucide-react';
 import { trackOrder, type OrderTrackingResult, STATUS_LABELS } from '../services/trackingService';
+import { ScrollToTop } from '../components/ScrollToTop';
 
 function StatusIcon({ status }: { status: string }) {
     const icons: Record<string, React.ReactNode> = {
@@ -48,6 +49,7 @@ export function TrackOrder() {
 
     return (
         <div className="min-h-screen bg-gray-50 py-12">
+            <ScrollToTop />
             <div className="max-w-2xl mx-auto px-4">
                 {/* Header */}
                 <div className="mb-8">

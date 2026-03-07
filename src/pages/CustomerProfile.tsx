@@ -11,6 +11,7 @@ import { updateDoc, doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { toast } from 'sonner';
 import { trackOrder, type OrderTrackingResult } from '../services/trackingService';
+import { ScrollToTop } from '../components/ScrollToTop';
 
 // ─── Tabs definition ──────────────────────────────────────────────────────────
 
@@ -483,6 +484,7 @@ export function CustomerProfile() {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            <ScrollToTop />
             <div className="max-w-5xl mx-auto px-4 py-10">
                 <div className="grid lg:grid-cols-4 gap-6">
                     {/* Sidebar */}
